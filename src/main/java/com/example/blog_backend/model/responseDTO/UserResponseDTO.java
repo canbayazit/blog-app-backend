@@ -7,12 +7,13 @@ import lombok.Data;
 import java.util.Set;
 
 @Data
-public class UserReponseDTO extends BaseDTO {
+public class UserResponseDTO extends BaseDTO {
 
     private String firstName;
     private String lastName;
-    private String password;
     private String email;
-    private boolean isEnable;
+    private String username;
+    private String bio;
+    private String photoUrl;
     private Set<RoleDTO> roles;
 }
