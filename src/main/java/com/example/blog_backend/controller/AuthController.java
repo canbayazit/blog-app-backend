@@ -4,12 +4,14 @@ package com.example.blog_backend.controller;
 import com.example.blog_backend.model.enums.RoleType;
 import com.example.blog_backend.model.requestDTO.LoginRequestDTO;
 import com.example.blog_backend.model.requestDTO.RegisterRequestDTO;
-import com.example.blog_backend.service.UserService;
+import com.example.blog_backend.service.AuthService;
 import com.example.blog_backend.util.security.JWTUtil;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,16 +26,16 @@ public class AuthController {
 
     private final AuthenticationManager authManager;
     private final JWTUtil jwtUtil;
-    private final UserService userService;
+    private final AuthService authService;
 
-    public AuthController(AuthenticationManager authManager, JWTUtil jwtUtil, UserService userService) {
+    public AuthController(AuthenticationManager authManager, JWTUtil jwtUtil, AuthService authService) {
         this.authManager = authManager;
         this.jwtUtil = jwtUtil;
-        this.userService = userService;
+        this.authService = authService;
     }
 
     @PostMapping("login")
-    public Map<String, Object> login(@RequestBody LoginRequestDTO body) {
+    public Map<String, Object> login(@Valid @RequestBody LoginRequestDTO body) {
         UsernamePasswordAuthenticationToken authInputToken =
                 new UsernamePasswordAuthenticationToken(body.getEmail(), body.getPassword());
 
@@ -48,13 +50,13 @@ public class AuthController {
     }
 
     @PostMapping("register")
-    public ResponseEntity<Boolean> register(@RequestBody RegisterRequestDTO body) {
-        userService.saveUserByRole(body, RoleType.USER);
+    public ResponseEntity<Boolean> register(@Valid @RequestBody RegisterRequestDTO body) {
+        authService.saveUserByRole(body, RoleType.USER);
         return new ResponseEntity<>(Boolean.TRUE, HttpStatus.OK);
     }
 
     @PostMapping("admin/login")
-    public Map<String, Object> adminLogin(@RequestBody LoginRequestDTO body) {
+    public Map<String, Object> adminLogin(@Valid @RequestBody LoginRequestDTO body) {
         UsernamePasswordAuthenticationToken authInputToken =
                 new UsernamePasswordAuthenticationToken(body.getEmail(), body.getPassword());
 
@@ -69,8 +71,8 @@ public class AuthController {
     }
 
     @PostMapping("admin/register")
-    public ResponseEntity<Boolean> adminRegister(@RequestBody RegisterRequestDTO body) {
-        userService.saveUserByRole(body, RoleType.ADMIN);
+    public ResponseEntity<Boolean> adminRegister(@Valid @RequestBody RegisterRequestDTO body) {
+        authService.saveUserByRole(body, RoleType.ADMIN);
         return new ResponseEntity<>(Boolean.TRUE, HttpStatus.OK);
     }
 }
