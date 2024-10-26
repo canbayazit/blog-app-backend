@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,12 +23,11 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfiguration {
 
     @Autowired
     private JWTFilter filter;
-
-    /*private final SecurityService uds;*/
 
     private static final String[] AUTH_WHITELIST = {
             "/auth/**",
@@ -45,14 +45,16 @@ public class SecurityConfiguration {
     };
 
     private static final String[] USER_AUTH_WHITELIST = {
+            "/selam"
+    };
 
-
+    private static final String[] USER_ADMIN_AUTH_WHITELIST = {
+            "/user/**",
     };
 
     private static final String[] ADMIN_AUTH_WHITELIST = {
-            "/role",
-            "/role/**"
-
+            "/role/**",
+            "/admin/**",
     };
 
     @Bean
@@ -70,8 +72,9 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> {
                     auth
                             .requestMatchers(AUTH_WHITELIST).permitAll()
-                            .requestMatchers(ADMIN_AUTH_WHITELIST).hasRole("ADMIN")// İzin verilen yollar
-                            .requestMatchers(USER_AUTH_WHITELIST).hasRole("USER"); // Kullanıcı rolleri
+                            .requestMatchers(USER_ADMIN_AUTH_WHITELIST).hasAnyRole("ADMIN","USER")
+                            .requestMatchers(ADMIN_AUTH_WHITELIST).hasRole("ADMIN")
+                            .requestMatchers(USER_AUTH_WHITELIST).hasRole("USER");
                             /*.anyRequest().authenticated();*/ // Diğer tüm istekler doğrulama gerektirir
                 })
                 .sessionManagement(session -> session
