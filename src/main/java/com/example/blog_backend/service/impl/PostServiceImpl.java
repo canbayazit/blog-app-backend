@@ -1,10 +1,13 @@
 package com.example.blog_backend.service.impl;
 
 import com.example.blog_backend.core.service.impl.BaseServiceImpl;
+import com.example.blog_backend.entity.CategoryEntity;
 import com.example.blog_backend.entity.PostEntity;
+import com.example.blog_backend.entity.UserEntity;
 import com.example.blog_backend.mapper.PostMapper;
 import com.example.blog_backend.model.enums.PostStatus;
 import com.example.blog_backend.model.requestDTO.PostRequestDTO;
+import com.example.blog_backend.model.requestDTO.PostStatusRequestDTO;
 import com.example.blog_backend.model.responseDTO.PostResponseDTO;
 import com.example.blog_backend.repository.CategoryRepository;
 import com.example.blog_backend.repository.PostRepository;
@@ -13,7 +16,10 @@ import com.example.blog_backend.service.UserContextService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PostServiceImpl extends BaseServiceImpl<
@@ -53,8 +59,37 @@ public class PostServiceImpl extends BaseServiceImpl<
         }
     }
 
+    @Override
+    @Transactional
+    public PostResponseDTO sendPublishRequest(UUID postId) {
+        PostEntity postEntity = postRepository.findByUuid(postId).orElse(null);
+        if (postEntity != null) {
+            if (!postEntity.getStatus().equals(PostStatus.DRAFT)) {
+                throw new IllegalStateException("Only draft posts can be sent for review");
+            }
+            if (postEntity.getCategories() == null || postEntity.getCategories().isEmpty()) {
+                throw new IllegalArgumentException("Post must have at least one valid category");
+            }
+            Set<CategoryEntity> categories = categoryRepository.findByUuidIn(
+                    postEntity.getCategories().stream().map(CategoryEntity::getUuid).collect(Collectors.toSet())
+            );
+            if (categories.size() != postEntity.getCategories().size()) {
+                throw new IllegalArgumentException("Some categories are invalid");
+            }
+            postEntity.setStatus(PostStatus.PENDING_REVIEW);
+            postRepository.save(postEntity);
+            return postMapper.entityToDTO(postEntity);
+        } else {
+            return null;
+        }
+    }
 
-
+    @Override
+    public List<PostResponseDTO> getMyPostsByStatus(PostStatusRequestDTO status) {
+        UserEntity currentUser = userContextService.getCurrentAuthenticatedUser();
+        List<PostEntity> drafts = postRepository.findByUserAndStatus(currentUser, PostStatus.valueOf(status.getPostStatus()));
+        return postMapper.entityListToDTOList(drafts);
+    }
 
     //NOT: many to many ilişkilerde hibernate her bir bağlantı için ayrı ayrı sql sorgusu oluşturur ve buda performans
     // sorunu yaratabilir. Bu gibi durumlarda delete işlemi için aşağıdaki gibi Bulk Remove yani tek bir SQL Delete
