@@ -1,6 +1,7 @@
 package com.example.blog_backend.entity;
 
 import com.example.blog_backend.core.entity.BaseEntity;
+import com.example.blog_backend.model.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,6 +11,7 @@ import java.util.Set;
 
 @Entity
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Table(name = "users")
 public class UserEntity extends BaseEntity {
 
@@ -29,13 +31,14 @@ public class UserEntity extends BaseEntity {
     private String email;
 
     @Column
-    private boolean isEnable = true;
-
-    @Column
     private String bio;
 
     @Column
     private String photoUrl;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private UserStatus status = UserStatus.ACTIVE;
 
 
     @ManyToMany(fetch = FetchType.LAZY)
