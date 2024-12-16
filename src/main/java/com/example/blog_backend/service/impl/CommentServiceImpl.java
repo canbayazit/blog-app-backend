@@ -9,6 +9,9 @@ import com.example.blog_backend.repository.CommentRepository;
 import com.example.blog_backend.service.CommentService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.UUID;
+
 @Service
 public class CommentServiceImpl extends BaseServiceImpl<
         CommentEntity,
@@ -17,8 +20,16 @@ public class CommentServiceImpl extends BaseServiceImpl<
         CommentMapper,
         CommentRepository>
         implements CommentService {
-
+    private final CommentRepository commentRepository;
+    private final CommentMapper commentMapper;
     public CommentServiceImpl(CommentMapper commentMapper, CommentRepository commentRepository) {
         super(commentMapper, commentRepository);
+        this.commentMapper = commentMapper;
+        this.commentRepository = commentRepository;
+    }
+
+    @Override
+    public List<CommentResponseDTO> getAllCommentsByPostUuid(UUID postId) {
+        return commentMapper.entityListToDTOList(commentRepository.findAllByPostUuid(postId));
     }
 }
