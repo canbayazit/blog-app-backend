@@ -1,6 +1,6 @@
 package com.example.blog_backend.controller;
 
-import com.example.blog_backend.core.controller.impl.BaseControllerImpl;
+import com.example.blog_backend.core.controller.impl.AbstractBaseCrudControllerImpl;
 import com.example.blog_backend.model.requestDTO.CommentRequestDTO;
 import com.example.blog_backend.model.responseDTO.CommentResponseDTO;
 import com.example.blog_backend.service.CommentService;
@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("api/post/comment")
-public class CommentController extends BaseControllerImpl<
+public class CommentController extends AbstractBaseCrudControllerImpl<
         CommentResponseDTO,
         CommentRequestDTO,
         CommentService> {

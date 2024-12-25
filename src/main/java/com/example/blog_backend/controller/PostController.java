@@ -1,6 +1,6 @@
 package com.example.blog_backend.controller;
 
-import com.example.blog_backend.core.controller.impl.BaseControllerImpl;
+import com.example.blog_backend.core.controller.impl.AbstractBaseCrudControllerImpl;
 import com.example.blog_backend.model.requestDTO.PostRequestDTO;
 import com.example.blog_backend.model.requestDTO.PostStatusRequestDTO;
 import com.example.blog_backend.model.responseDTO.PostResponseDTO;
@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("api/post")
-public class PostController extends BaseControllerImpl<
+public class PostController extends AbstractBaseCrudControllerImpl<
         PostResponseDTO,
         PostRequestDTO,
         PostService> {
