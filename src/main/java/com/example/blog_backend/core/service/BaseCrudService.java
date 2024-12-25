@@ -1,11 +1,14 @@
 package com.example.blog_backend.core.service;
 
 import com.example.blog_backend.core.dto.BaseDTO;
+import com.example.blog_backend.model.requestDTO.BaseFilterRequestDTO;
+import com.example.blog_backend.model.responseDTO.PageResponseDTO;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
-public interface BaseService<
+public interface BaseCrudService<
         DTO extends BaseDTO,
         RequestDTO> {
 
@@ -18,5 +21,7 @@ public interface BaseService<
     DTO getByUUID(UUID uuid);
 
     Boolean deleteByUUID(UUID uuid);
+
+    PageResponseDTO<DTO> getAllPageByFilter(BaseFilterRequestDTO filter);
 
 }

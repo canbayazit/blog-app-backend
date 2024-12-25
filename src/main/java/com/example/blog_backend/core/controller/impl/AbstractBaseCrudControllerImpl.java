@@ -1,8 +1,10 @@
 package com.example.blog_backend.core.controller.impl;
 
-import com.example.blog_backend.core.controller.BaseController;
+import com.example.blog_backend.core.controller.BaseCrudController;
 import com.example.blog_backend.core.dto.BaseDTO;
-import com.example.blog_backend.core.service.BaseService;
+import com.example.blog_backend.core.service.BaseCrudService;
+import com.example.blog_backend.model.requestDTO.BaseFilterRequestDTO;
+import com.example.blog_backend.model.responseDTO.PageResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,17 +15,21 @@ import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-public abstract class BaseControllerImpl<
+public abstract class AbstractBaseCrudControllerImpl<
         DTO extends BaseDTO,
         RequestDTO,
-        Service extends BaseService<DTO, RequestDTO>>
-        implements BaseController<DTO, RequestDTO> {
+        Service extends BaseCrudService<DTO, RequestDTO>>
+        implements BaseCrudController<DTO, RequestDTO> {
 
     private final Service getService;
 
     @Override
     public ResponseEntity<List<DTO>> getAll() {
         return new ResponseEntity<>(getService.getAll(), HttpStatus.OK);
+    }
+    @Override
+    public ResponseEntity<PageResponseDTO<DTO>> getAllPageByFilter(@RequestBody BaseFilterRequestDTO filterRequestDTO){
+        return new ResponseEntity<>(getService.getAllPageByFilter(filterRequestDTO), HttpStatus.OK);
     }
 
     @Override
