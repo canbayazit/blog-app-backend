@@ -1,6 +1,6 @@
 package com.example.blog_backend.service.impl;
 
-import com.example.blog_backend.core.service.impl.BaseServiceImpl;
+import com.example.blog_backend.core.service.impl.AbstractBaseCrudServiceImpl;
 import com.example.blog_backend.entity.CategoryEntity;
 import com.example.blog_backend.entity.PostEntity;
 import com.example.blog_backend.entity.UserEntity;
@@ -9,8 +9,8 @@ import com.example.blog_backend.model.enums.PostStatus;
 import com.example.blog_backend.model.requestDTO.PostRequestDTO;
 import com.example.blog_backend.model.requestDTO.PostStatusRequestDTO;
 import com.example.blog_backend.model.responseDTO.PostResponseDTO;
-import com.example.blog_backend.repository.CategoryRepository;
 import com.example.blog_backend.repository.PostRepository;
+import com.example.blog_backend.service.CategoryService;
 import com.example.blog_backend.service.PostService;
 import com.example.blog_backend.service.UserContextService;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class PostServiceImpl extends BaseServiceImpl<
+public class PostServiceImpl extends AbstractBaseCrudServiceImpl<
         PostEntity,
         PostResponseDTO,
         PostRequestDTO,
@@ -30,15 +30,15 @@ public class PostServiceImpl extends BaseServiceImpl<
         PostRepository>
         implements PostService {
     private final PostRepository postRepository;
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
     private final PostMapper postMapper;
     private final UserContextService userContextService;
 
-    public PostServiceImpl(PostMapper postMapper, PostRepository postRepository, CategoryRepository categoryRepository,
+    public PostServiceImpl(PostMapper postMapper, PostRepository postRepository, CategoryService categoryService,
                            UserContextService userContextService) {
         super(postMapper, postRepository);
         this.postRepository = postRepository;
-        this.categoryRepository = categoryRepository;
+        this.categoryService = categoryService;
         this.postMapper = postMapper;
         this.userContextService = userContextService;
     }
@@ -70,10 +70,11 @@ public class PostServiceImpl extends BaseServiceImpl<
             if (postEntity.getCategories() == null || postEntity.getCategories().isEmpty()) {
                 throw new IllegalArgumentException("Post must have at least one valid category");
             }
-            Set<CategoryEntity> categories = categoryRepository.findByUuidIn(
-                    postEntity.getCategories().stream().map(CategoryEntity::getUuid).collect(Collectors.toSet())
-            );
-            if (categories.size() != postEntity.getCategories().size()) {
+            Set<UUID> categoryUuids = postEntity.getCategories()
+                    .stream()
+                    .map(CategoryEntity::getUuid)
+                    .collect(Collectors.toSet());
+            if (categoryService.countCategoryByUuids(categoryUuids) != postEntity.getCategories().size()) {
                 throw new IllegalArgumentException("Some categories are invalid");
             }
             postEntity.setStatus(PostStatus.PENDING_REVIEW);
