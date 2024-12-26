@@ -1,6 +1,6 @@
 package com.example.blog_backend.service.impl;
 
-import com.example.blog_backend.core.service.impl.BaseServiceImpl;
+import com.example.blog_backend.core.service.impl.AbstractBaseCrudServiceImpl;
 import com.example.blog_backend.entity.CommentEntity;
 import com.example.blog_backend.mapper.CommentMapper;
 import com.example.blog_backend.model.requestDTO.CommentRequestDTO;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class CommentServiceImpl extends BaseServiceImpl<
+public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
         CommentEntity,
         CommentResponseDTO,
         CommentRequestDTO,

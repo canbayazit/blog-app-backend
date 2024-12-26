@@ -1,7 +1,7 @@
 package com.example.blog_backend.service.impl;
 
 
-import com.example.blog_backend.core.service.impl.BaseServiceImpl;
+import com.example.blog_backend.core.service.impl.AbstractBaseCrudServiceImpl;
 import com.example.blog_backend.entity.RoleEntity;
 import com.example.blog_backend.mapper.RoleMapper;
 import com.example.blog_backend.model.requestDTO.RoleRequestDTO;
@@ -11,7 +11,7 @@ import com.example.blog_backend.service.RoleService;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RoleServiceImpl extends BaseServiceImpl<
+public class RoleServiceImpl extends AbstractBaseCrudServiceImpl<
         RoleEntity,
         RoleResponseDTO,
         RoleRequestDTO,
