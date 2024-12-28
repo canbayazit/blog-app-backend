@@ -5,6 +5,7 @@ import com.example.blog_backend.core.entity.BaseEntity;
 import com.example.blog_backend.core.mapper.IBaseMapper;
 import com.example.blog_backend.core.repository.BaseRepository;
 import com.example.blog_backend.core.service.BaseCrudService;
+import com.example.blog_backend.core.specification.BaseSpecification;
 import com.example.blog_backend.model.requestDTO.BaseFilterRequestDTO;
 import com.example.blog_backend.model.responseDTO.PageResponseDTO;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +25,15 @@ public abstract class AbstractBaseCrudServiceImpl<
         DTO extends BaseDTO,
         RequestDTO,
         Mapper extends IBaseMapper<DTO, Entity, RequestDTO>,
-        Repository extends BaseRepository<Entity>>
+        Repository extends BaseRepository<Entity>,
+        Specification extends BaseSpecification<Entity>>
         implements BaseCrudService<DTO,RequestDTO> {
 
     private final Mapper getMapper;
 
     private final Repository getRepository;
+
+    private final Specification getSpecification;
 
     @Override
     public List<DTO> getAll() {
@@ -58,7 +62,9 @@ public abstract class AbstractBaseCrudServiceImpl<
                     Sort.by("id").ascending());
         }
 
-        Page<Entity> entityPage = getRepository.findAll(pageable);
+        getSpecification.setCriteriaList(filter.getFilters());
+
+        Page<Entity> entityPage = getRepository.findAll(getSpecification, pageable);
         return getMapper.pageEntityToPageDTO(entityPage);
     }
 
