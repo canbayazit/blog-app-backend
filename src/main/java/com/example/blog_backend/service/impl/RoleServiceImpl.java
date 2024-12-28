@@ -8,6 +8,7 @@ import com.example.blog_backend.model.requestDTO.RoleRequestDTO;
 import com.example.blog_backend.model.responseDTO.RoleResponseDTO;
 import com.example.blog_backend.repository.RoleRepository;
 import com.example.blog_backend.service.RoleService;
+import com.example.blog_backend.specification.RoleSpecification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,10 +17,11 @@ public class RoleServiceImpl extends AbstractBaseCrudServiceImpl<
         RoleResponseDTO,
         RoleRequestDTO,
         RoleMapper,
-        RoleRepository>
+        RoleRepository,
+        RoleSpecification>
         implements RoleService {
 
-    public RoleServiceImpl(RoleMapper getMapper, RoleRepository getRepository) {
-        super(getMapper, getRepository);
+    public RoleServiceImpl(RoleMapper getMapper, RoleRepository getRepository, RoleSpecification roleSpecification) {
+        super(getMapper, getRepository, roleSpecification);
     }
 }

@@ -13,6 +13,7 @@ import com.example.blog_backend.repository.PostRepository;
 import com.example.blog_backend.service.CategoryService;
 import com.example.blog_backend.service.PostService;
 import com.example.blog_backend.service.UserContextService;
+import com.example.blog_backend.specification.PostSpecification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,8 @@ public class PostServiceImpl extends AbstractBaseCrudServiceImpl<
         PostResponseDTO,
         PostRequestDTO,
         PostMapper,
-        PostRepository>
+        PostRepository,
+        PostSpecification>
         implements PostService {
     private final PostRepository postRepository;
     private final CategoryService categoryService;
@@ -35,8 +37,8 @@ public class PostServiceImpl extends AbstractBaseCrudServiceImpl<
     private final UserContextService userContextService;
 
     public PostServiceImpl(PostMapper postMapper, PostRepository postRepository, CategoryService categoryService,
-                           UserContextService userContextService) {
-        super(postMapper, postRepository);
+                           PostSpecification postSpecification, UserContextService userContextService) {
+        super(postMapper, postRepository, postSpecification);
         this.postRepository = postRepository;
         this.categoryService = categoryService;
         this.postMapper = postMapper;

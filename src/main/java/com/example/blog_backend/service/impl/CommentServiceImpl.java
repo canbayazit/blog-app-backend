@@ -7,6 +7,7 @@ import com.example.blog_backend.model.requestDTO.CommentRequestDTO;
 import com.example.blog_backend.model.responseDTO.CommentResponseDTO;
 import com.example.blog_backend.repository.CommentRepository;
 import com.example.blog_backend.service.CommentService;
+import com.example.blog_backend.specification.CommentSpecification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,12 +19,14 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
         CommentResponseDTO,
         CommentRequestDTO,
         CommentMapper,
-        CommentRepository>
+        CommentRepository,
+        CommentSpecification>
         implements CommentService {
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
-    public CommentServiceImpl(CommentMapper commentMapper, CommentRepository commentRepository) {
-        super(commentMapper, commentRepository);
+    public CommentServiceImpl(CommentMapper commentMapper, CommentRepository commentRepository,
+                              CommentSpecification commentSpecification) {
+        super(commentMapper, commentRepository, commentSpecification);
         this.commentMapper = commentMapper;
         this.commentRepository = commentRepository;
     }
