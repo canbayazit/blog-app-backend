@@ -2,6 +2,7 @@ package com.example.blog_backend.entity;
 
 import com.example.blog_backend.core.entity.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.persistence.Entity;
 import lombok.*;
 
 import java.util.HashSet;
