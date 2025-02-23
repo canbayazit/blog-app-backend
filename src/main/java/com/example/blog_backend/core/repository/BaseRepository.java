@@ -9,5 +9,4 @@ import java.util.*;
 @NoRepositoryBean
 public interface BaseRepository<T> extends JpaRepository<T, Long>, JpaSpecificationExecutor<T> {
     Optional<T> findByUuid(UUID uuid);
-    Set<T> findByUuidIn(Collection<UUID> uuids);
 }
