@@ -2,6 +2,7 @@ package com.example.blog_backend.core.controller.impl;
 
 import com.example.blog_backend.core.controller.BaseCrudController;
 import com.example.blog_backend.core.dto.BaseDTO;
+import com.example.blog_backend.core.entity.BaseEntity;
 import com.example.blog_backend.core.service.BaseCrudService;
 import com.example.blog_backend.model.requestDTO.BaseFilterRequestDTO;
 import com.example.blog_backend.model.responseDTO.PageResponseDTO;
@@ -16,9 +17,10 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 public abstract class AbstractBaseCrudControllerImpl<
+        Entity extends BaseEntity,
         DTO extends BaseDTO,
         RequestDTO,
-        Service extends BaseCrudService<DTO, RequestDTO>>
+        Service extends BaseCrudService<Entity, DTO, RequestDTO>>
         implements BaseCrudController<DTO, RequestDTO> {
 
     private final Service getService;
