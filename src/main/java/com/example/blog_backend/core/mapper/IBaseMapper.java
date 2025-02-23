@@ -21,11 +21,17 @@ public interface IBaseMapper<
 
     List<Entity> dtoListTOEntityList(List<DTO> dtoList);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "uuid", ignore = true)
     Entity requestDTOToEntity(RequestDTO dto);
 
     List<Entity> requestDtoListTOEntityList(List<RequestDTO> dtoList);
 
-    //entity'nin tamamını veya bir bölümünü update etmek için kullanılan mapper
+    // entity'nin tamamını veya bir bölümünü update etmek için kullanılan mapper
+    // request dtodan gelen entitylerde uuid ve id ortak alan olduğu için sanki yeni bir değer setliyormuş gibi algılıyor
+    // o yüzden güncelleme yaparken uuid ve id 'yi güncellemeye çalışıyor mapstruct, bunu engellemek için ignore ediyoruz.
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "uuid", ignore = true)
     Entity requestDtoToExistEntity(@MappingTarget Entity entity, RequestDTO requestDTO);
 
     // hasContent boolean türünde olduğu için mapstruct isContent olarak algılıyor yani "is" ifadesine bakıyormuş
