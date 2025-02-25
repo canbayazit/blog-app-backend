@@ -21,52 +21,32 @@ public class CommentSpecification extends BaseSpecification<CommentEntity> {
         this.criteriaList = criteriaList;
     }
 
+    // commentlar için sadece post id göre commentları getirmeye ihtiyacım var. O yüzden diğer filtrelere şimdilik
+    // ihtiyacım yok.
     @Override
     public Predicate toPredicate(Root<CommentEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
         for (SearchCriteria criteria: criteriaList) {
             Predicate predicate = null;
-            if (criteria.getOperation().equalsIgnoreCase(">")) {
-                predicate = criteriaBuilder.greaterThan(
-                        root.<String>get(criteria.getKey()), criteria.getValue().toString());
-            } else if (criteria.getOperation().equalsIgnoreCase("<")) {
-                predicate = criteriaBuilder.lessThan(
-                        root.<String>get(criteria.getKey()), criteria.getValue().toString());
-            } else if (criteria.getOperation().equalsIgnoreCase(">=")) {
-                predicate = criteriaBuilder.greaterThanOrEqualTo(
-                        root.<String>get(criteria.getKey()), criteria.getValue().toString());
-            } else if (criteria.getOperation().equalsIgnoreCase("<=")) {
-                predicate = criteriaBuilder.lessThanOrEqualTo(
-                        root.<String>get(criteria.getKey()), criteria.getValue().toString());
-                // burda commentları çekerken comment entity'yi post entity ile birleştirip post uuid si şu olan commentları
-                // getir demek için filtreleme kullandık. Böylece bir posta ait commentları böylece çekebiliriz.
-            } else if (criteria.getOperation().equalsIgnoreCase("=")) {
+            // burda commentları çekerken comment entity'yi post entity ile birleştirip post uuid si şu olan commentları
+            // getir demek için filtreleme kullandık. Böylece bir posta ait commentları çekebiliriz.
+            if (criteria.getOperation().equalsIgnoreCase("=")) {
                 if (criteria.getKey().equals("post")){
-                    // root burda prooductEntity,
-                    // root.join("categoryList") diyerek ProductEntity'i CategoryEntity tablosuyla join et dedik
-                    // birleştirilmiş tabloyu join değişkenine atadık.
-                    // sonra birleştirilmiş tablodan name kolonunu al ve client'tan gelen value ile filtrele
-                    // burda  name category entity'de tanımlı category'nin ismini tutan kolon ismi
-                    // mesela teknoloji category'sinden productları getir demiş olacaz.
+                    // root burda CommentEntity,
+                    // root.join("post") diyerek CommentEntity'i PostEntity tablosuyla join et dedik
+                    // birleştirilen tabloyu join değişkenine atadık.
+                    // Burda join böylece birleştirilen tablo olan Post Entity'yi  temsil etmiş oluyor.
 
-                    // Not: join.get dediğimizde ana tabloyu değil joinlediğimiz tabloyu yani comment entity'yi
-                    // eğer root.get dersek ana tabloyu almış oluruz.
+                    // Not: join.get("uuid") dediğimizde Post Entity tablosundaki property'lere yani fieldlara bakar
+                    // eğer root.get dersek ana tabloyu yani comment entity'deki değişkenleri almış oluruz.
+                    // Joinlenmiş 2 tabloda filtreleme yaparken hangi tablonun değişkenine göre filtreleme yapacağımız
+                    // bu şekilde ayırt edebiliriz.
                     Join<CommentEntity, PostEntity> join = root.join("post");
                     predicate = criteriaBuilder.equal(join.get("uuid"), UUID.fromString(criteria.getValue().toString()));
                 } else {
                     predicate = criteriaBuilder.equal(
                             root.<String>get(criteria.getKey()), criteria.getValue().toString()
                     );
-                }
-            } else if (criteria.getOperation().equalsIgnoreCase(":")) {
-                if (root.get(criteria.getKey()).getJavaType() == String.class) {
-                    predicate = criteriaBuilder.like(
-                            criteriaBuilder.lower(root.<String>get(criteria.getKey())), "%" +
-                                    criteria.getValue().toString().toLowerCase() + "%"
-                    );
-                } else {
-                    predicate = criteriaBuilder.equal(
-                            root.<String>get(criteria.getKey()), criteria.getValue().toString());
                 }
             } else {
                 continue;
