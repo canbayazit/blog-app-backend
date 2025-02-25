@@ -2,7 +2,11 @@ package com.example.blog_backend.entity;
 
 import com.example.blog_backend.core.entity.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.persistence.Entity;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -22,6 +26,17 @@ public class CommentEntity extends BaseEntity {
     @JoinColumn(name = "post_id", nullable = false)
     private PostEntity post;
 
-    @Column(nullable = false)
-    private int likes = 0;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_comment_id")
+    private CommentEntity parentComment;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "replied_to_comment_id")
+    private CommentEntity repliedTo;
+
+    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CommentEntity> replies = new ArrayList<>();
+
+    @OneToOne(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private CommentAggregateEntity statistics;
 }
