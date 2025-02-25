@@ -1,6 +1,8 @@
 package com.example.blog_backend.service.impl;
 
 import com.example.blog_backend.core.service.impl.AbstractBaseCrudServiceImpl;
+import com.example.blog_backend.design.event.CommentCreatedEvent;
+import com.example.blog_backend.design.event.CommentRemovedEvent;
 import com.example.blog_backend.entity.*;
 import com.example.blog_backend.mapper.CommentAggregateMapper;
 import com.example.blog_backend.mapper.CommentMapper;
@@ -12,12 +14,14 @@ import com.example.blog_backend.repository.*;
 import com.example.blog_backend.service.CommentService;
 import com.example.blog_backend.service.UserContextService;
 import com.example.blog_backend.specification.CommentSpecification;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -145,4 +149,114 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
         return pageResponseDTO;
     }
 
+
+    @Override
+    @Transactional
+    public CommentResponseDTO save(CommentRequestDTO requestDTO) {
+        PostEntity post = postRepository.findByUuid(requestDTO.getPostId())
+                .orElseThrow(() -> new EntityNotFoundException("Post not found."));
+        UserEntity user = userContextService.getRequiredAuthenticatedUser();
+        CommentEntity comment = commentMapper.requestDTOToEntity(requestDTO, post, user);
+        CommentResponseDTO commentResponseDTO = commentMapper.entityToDTO(commentRepository.save(comment));
+        if (commentResponseDTO.getStatistics() == null){
+            CommentAggregateEntity commentAggregateEntity = commentAggregateMapper.requestDTOToEntity(new CommentAggregateRequestDTO());
+            commentAggregateEntity.setComment(comment);
+            commentResponseDTO.setStatistics(commentAggregateMapper.entityToDTO(commentAggregateRepository.save(commentAggregateEntity)));
+        }
+        /*PostStatisticEntity stat = post.getStatistics();
+        stat.setLikeCount(stat.getLikeCount() + 1);
+        postStatisticRepository.save(stat);*/
+
+        CommentCreatedEvent event = new CommentCreatedEvent(this,
+                comment.getPost().getId(),
+                comment.getId()
+        );
+        eventPublisher.publishEvent(event);
+
+        return commentResponseDTO;
+    }
+
+    @Override
+    @Transactional
+    public CommentResponseDTO createReply(UUID targetCommentUuid, CommentChildRequestDTO requestDTO) {
+        // Yanıt verilecek yorumu alıyoruz.
+        CommentEntity targetComment = commentRepository.findByUuid(targetCommentUuid)
+                .orElseThrow(() -> new EntityNotFoundException("Target comment not found."));
+
+        // Thread'in ana yorumunu belirleyelim:
+        // Eğer targetComment bir ana yorum ise, thread ana yorumu targetComment olur.
+        // Eğer targetComment bir child ise, thread ana yorumu targetComment.getParentComment() olur.
+        CommentEntity threadParent = (targetComment.getParentComment() == null)
+                ? targetComment
+                : targetComment.getParentComment();
+
+        // Yeni cevap (child comment) oluşturulurken, parent olarak thread ana yorumu set ediyoruz.
+        CommentEntity childComment = commentMapper.requestDTOToChildCommentEntity(
+                requestDTO,
+                threadParent,
+                userContextService.getRequiredAuthenticatedUser());
+
+        // Eğer targetComment bir child ise, yani zaten bir yanıtlanmış yorumsa, repliedTo'yu set edelim.
+        if (targetComment.getParentComment() != null) {
+            childComment.setRepliedTo(targetComment);
+        }
+
+        CommentResponseDTO commentResponseDTO = commentMapper.entityToDTO(commentRepository.save(childComment));
+
+        if (commentResponseDTO.getStatistics() == null){
+            CommentAggregateEntity commentAggregateEntity = commentAggregateMapper.requestDTOToEntity(new CommentAggregateRequestDTO());
+            commentAggregateEntity.setComment(childComment);
+            commentResponseDTO.setStatistics(commentAggregateMapper.entityToDTO(commentAggregateRepository.save(commentAggregateEntity)));
+        }
+
+        CommentCreatedEvent event = new CommentCreatedEvent(this,
+                childComment.getPost().getId(),
+                childComment.getId());
+        eventPublisher.publishEvent(event);
+
+        return commentMapper.entityToDTO(childComment);
+    }
+
+
+    @Override
+    @Transactional
+    public Boolean deleteByUUID(UUID uuid) {
+        CommentEntity comment = commentRepository.findByUuid(uuid).orElse(null);
+        if (comment == null) {
+            return false;
+        }
+
+        // Kaç yorum silinecek (parent + child sayısı?)
+        int totalDeleted = 1;
+
+        // 3) Child Yorumlar Var mı?
+        // (Tek seviye child. CascadeType.ALL ise, repository.delete(parent) çocukları da silecek.)
+        List<CommentEntity> replies = comment.getReplies();
+        if (replies != null && !replies.isEmpty()) {
+            // totalDeleted = 1 (kendisi) + replies.size()
+            totalDeleted += replies.size();
+        }
+
+        CommentRemovedEvent event = new CommentRemovedEvent(this,
+                comment.getPost().getId(),
+                totalDeleted);
+        eventPublisher.publishEvent(event);
+
+
+        /*if (comment.getParentComment() != null) {
+            // Yani bu comment bir child
+            // Parent aggregator'ı bul
+            CommentEntity parentComment = comment.getParentComment();
+            CommentAggregateEntity parentAgg = parentComment.getStatistics();
+            parentAgg.setChildCount(parentAgg.getChildCount() - 1);
+            commentAggregateRepository.save(parentAgg);
+
+        }*/
+
+        // 5) Yorumu Sil (Cascade sayesinde child'lar da otomatik silinir.)
+        commentRepository.delete(comment);
+
+        return true;
+    }
 }
+

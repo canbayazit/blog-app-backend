@@ -43,7 +43,15 @@ public class CommentSpecification extends BaseSpecification<CommentEntity> {
                     // bu şekilde ayırt edebiliriz.
                     Join<CommentEntity, PostEntity> join = root.join("post");
                     predicate = criteriaBuilder.equal(join.get("uuid"), UUID.fromString(criteria.getValue().toString()));
-                } else {
+                } else if (criteria.getKey().equals("parentComment")) {
+                    // Eğer gelen değer "null" ise, ana yorumları getir:
+                    if (criteria.getValue() == null) {
+                        predicate = criteriaBuilder.isNull(root.get("parentComment"));
+                    } else {
+                        // Aksi halde, belirli bir parent yorumun child yorumlarını getir.
+                        predicate = criteriaBuilder.equal(root.get("parentComment").get("uuid"), UUID.fromString(criteria.getValue().toString()));
+                    }
+                }  else {
                     predicate = criteriaBuilder.equal(
                             root.<String>get(criteria.getKey()), criteria.getValue().toString()
                     );

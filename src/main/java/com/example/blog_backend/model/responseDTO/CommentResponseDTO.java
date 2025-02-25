@@ -9,4 +9,5 @@ public class CommentResponseDTO extends BaseDTO {
     private String comment;
     private UserSummaryDTO user;
     private CommentAggregateResponseDTO statistics;
+    private String repliedTo;
 }
