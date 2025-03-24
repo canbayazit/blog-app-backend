@@ -3,7 +3,7 @@ package com.example.blog_backend.core.service;
 import com.example.blog_backend.core.dto.BaseDTO;
 import com.example.blog_backend.core.entity.BaseEntity;
 import com.example.blog_backend.model.requestDTO.BaseFilterRequestDTO;
-import com.example.blog_backend.model.responseDTO.PageResponseDTO;
+import com.example.blog_backend.model.responseDTO.PageDTO;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +25,6 @@ public interface BaseCrudService<
 
     Boolean deleteByUUID(UUID uuid);
 
-    PageResponseDTO<DTO> getAllPageByFilter(BaseFilterRequestDTO filter);
+    PageDTO<DTO> getAllPageByFilter(BaseFilterRequestDTO filter);
 
 }
