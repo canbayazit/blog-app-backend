@@ -4,7 +4,7 @@ import com.example.blog_backend.core.service.impl.AbstractBaseCrudServiceImpl;
 import com.example.blog_backend.entity.CategoryEntity;
 import com.example.blog_backend.mapper.CategoryMapper;
 import com.example.blog_backend.model.requestDTO.CategoryRequestDTO;
-import com.example.blog_backend.model.responseDTO.CategoryResponseDTO;
+import com.example.blog_backend.model.responseDTO.CategoryDTO;
 import com.example.blog_backend.repository.CategoryRepository;
 import com.example.blog_backend.service.CategoryService;
 import com.example.blog_backend.specification.CategorySpecification;
@@ -16,7 +16,7 @@ import java.util.UUID;
 @Service
 public class CategoryServiceImpl extends AbstractBaseCrudServiceImpl<
         CategoryEntity,
-        CategoryResponseDTO,
+        CategoryDTO,
         CategoryRequestDTO,
         CategoryMapper,
         CategoryRepository,
