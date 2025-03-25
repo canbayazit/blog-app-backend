@@ -1,23 +1,19 @@
 package com.example.blog_backend.model.requestDTO;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
+import com.example.blog_backend.core.dto.BaseRequestDTO;
+import com.example.blog_backend.model.enums.PostStatus;
 import lombok.Data;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Data
-public class PostRequestDTO {
-    @NotBlank(message = "Title is mandatory")
+public class PostRequestDTO extends BaseRequestDTO {
     private String title;
-
-    @NotBlank(message = "Content is mandatory")
     private String content;
-
-    @NotEmpty(message = "category is mandatory")
-    private Set<UUID> categoryIds;
-
+    private UserRequestDTO user;
+    private PostStatus status;
+    private Set<CategoryRequestDTO> categories;
+    private List<CommentRequestDTO> comments;
     private List<String> tags;
+    private PostStatisticRequestDTO statistics;
 }

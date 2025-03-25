@@ -1,53 +1,79 @@
 package com.example.blog_backend.service.impl;
 
 import com.example.blog_backend.core.service.impl.AbstractBaseCrudServiceImpl;
-import com.example.blog_backend.entity.CategoryEntity;
-import com.example.blog_backend.entity.PostEntity;
-import com.example.blog_backend.entity.UserEntity;
+import com.example.blog_backend.entity.*;
 import com.example.blog_backend.mapper.PostMapper;
+import com.example.blog_backend.mapper.PostStatisticMapper;
 import com.example.blog_backend.model.enums.PostStatus;
-import com.example.blog_backend.model.requestDTO.PostRequestDTO;
-import com.example.blog_backend.model.requestDTO.PostStatusRequestDTO;
-import com.example.blog_backend.model.responseDTO.PostResponseDTO;
+import com.example.blog_backend.model.requestDTO.*;
+import com.example.blog_backend.model.responseDTO.PostDTO;
+import com.example.blog_backend.repository.CategoryRepository;
+import com.example.blog_backend.repository.PostLikeRepository;
 import com.example.blog_backend.repository.PostRepository;
-import com.example.blog_backend.service.CategoryService;
-import com.example.blog_backend.service.PostService;
-import com.example.blog_backend.service.UserContextService;
+import com.example.blog_backend.repository.PostStatisticRepository;
+import com.example.blog_backend.service.*;
 import com.example.blog_backend.specification.PostSpecification;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class PostServiceImpl extends AbstractBaseCrudServiceImpl<
         PostEntity,
-        PostResponseDTO,
+        PostDTO,
         PostRequestDTO,
         PostMapper,
         PostRepository,
         PostSpecification>
         implements PostService {
     private final PostRepository postRepository;
+    private final PostStatisticRepository postStatisticRepository;
     private final CategoryService categoryService;
     private final PostMapper postMapper;
+    private final PostSpecification postSpecification;
+    private final PostStatisticMapper postStatisticMapper;
     private final UserContextService userContextService;
+    private final PostLikeService postLikeService;
+    private final PostLikeRepository postLikeRepository;
+    private final PostStatisticService postStatisticService;
+    private final CategoryRepository categoryRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public PostServiceImpl(PostMapper postMapper, PostRepository postRepository, CategoryService categoryService,
-                           PostSpecification postSpecification, UserContextService userContextService) {
+
+    public PostServiceImpl(PostMapper postMapper,
+                           PostRepository postRepository,
+                           CategoryService categoryService,
+                           PostSpecification postSpecification,
+                           UserContextService userContextService,
+                           PostStatisticMapper postStatisticMapper,
+                           PostStatisticRepository postStatisticRepository,
+                           PostLikeService postLikeService,
+                           PostLikeRepository postLikeRepository,
+                           PostStatisticService postStatisticService,
+                           CategoryRepository categoryRepository,
+                           ApplicationEventPublisher eventPublisher) {
         super(postMapper, postRepository, postSpecification);
         this.postRepository = postRepository;
+        this.postStatisticRepository = postStatisticRepository;
         this.categoryService = categoryService;
         this.postMapper = postMapper;
+        this.postSpecification = postSpecification;
+        this.postStatisticMapper = postStatisticMapper;
         this.userContextService = userContextService;
+        this.postLikeService = postLikeService;
+        this.postLikeRepository = postLikeRepository;
+        this.eventPublisher = eventPublisher;
+        this.postStatisticService = postStatisticService;
+        this.categoryRepository = categoryRepository;
+
     }
 
     @Override
     @Transactional
-    public PostResponseDTO update(UUID uuid, PostRequestDTO requestDTO) {
+    public PostDTO update(UUID uuid, PostRequestDTO requestDTO) {
         PostEntity postEntity = postRepository.findByUuid(uuid).orElse(null);
         if (postEntity != null) {
             if (!postEntity.getStatus().equals(PostStatus.DRAFT)) {
@@ -63,7 +89,7 @@ public class PostServiceImpl extends AbstractBaseCrudServiceImpl<
 
     @Override
     @Transactional
-    public PostResponseDTO sendPublishRequest(UUID postId) {
+    public PostDTO sendPublishRequest(UUID postId) {
         PostEntity postEntity = postRepository.findByUuid(postId).orElse(null);
         if (postEntity != null) {
             if (!postEntity.getStatus().equals(PostStatus.DRAFT)) {
@@ -88,8 +114,8 @@ public class PostServiceImpl extends AbstractBaseCrudServiceImpl<
     }
 
     @Override
-    public List<PostResponseDTO> getMyPostsByStatus(PostStatusRequestDTO status) {
-        UserEntity currentUser = userContextService.getCurrentAuthenticatedUser();
+    public List<PostDTO> getMyPostsByStatus(PostStatusRequestDTO status) {
+        UserEntity currentUser = userContextService.getRequiredAuthenticatedUser();
         List<PostEntity> drafts = postRepository.findByUserAndStatus(currentUser, PostStatus.valueOf(status.getPostStatus()));
         return postMapper.entityListToDTOList(drafts);
     }
