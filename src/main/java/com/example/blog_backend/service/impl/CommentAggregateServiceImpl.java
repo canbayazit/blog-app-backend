@@ -4,10 +4,9 @@ import com.example.blog_backend.core.service.impl.AbstractBaseCrudServiceImpl;
 import com.example.blog_backend.entity.CommentAggregateEntity;
 import com.example.blog_backend.mapper.CommentAggregateMapper;
 import com.example.blog_backend.model.requestDTO.CommentAggregateRequestDTO;
-import com.example.blog_backend.model.responseDTO.CommentAggregateResponseDTO;
+import com.example.blog_backend.model.responseDTO.CommentAggregateDTO;
 import com.example.blog_backend.repository.CommentAggregateRepository;
 import com.example.blog_backend.service.CommentAggregateService;
-import com.example.blog_backend.service.UserContextService;
 import com.example.blog_backend.specification.CommentAggregateSpecification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CommentAggregateServiceImpl extends AbstractBaseCrudServiceImpl<
         CommentAggregateEntity,
-        CommentAggregateResponseDTO,
+        CommentAggregateDTO,
         CommentAggregateRequestDTO,
         CommentAggregateMapper,
         CommentAggregateRepository,
@@ -26,9 +25,8 @@ public class CommentAggregateServiceImpl extends AbstractBaseCrudServiceImpl<
 
     public CommentAggregateServiceImpl(CommentAggregateMapper commentAggregateMapper,
                                        CommentAggregateRepository commentAggregateRepository,
-                                       CommentAggregateSpecification commentAggregateSpecification,
-                                       UserContextService userContextService) {
-        super(commentAggregateMapper, commentAggregateRepository, commentAggregateSpecification, userContextService);
+                                       CommentAggregateSpecification commentAggregateSpecification) {
+        super(commentAggregateMapper, commentAggregateRepository, commentAggregateSpecification);
         this.commentAggregateRepository = commentAggregateRepository;
     }
 

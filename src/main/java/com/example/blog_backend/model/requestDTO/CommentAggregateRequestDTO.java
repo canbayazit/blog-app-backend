@@ -5,4 +5,7 @@ import lombok.Data;
 
 @Data
 public class CommentAggregateRequestDTO extends BaseRequestDTO {
+    private CommentRequestDTO comment;
+    private int likeCount = 0;
+    private int childCount;
 }
