@@ -7,7 +7,7 @@ import com.example.blog_backend.entity.*;
 import com.example.blog_backend.mapper.CommentLikeMapper;
 import com.example.blog_backend.model.enums.ContextType;
 import com.example.blog_backend.model.requestDTO.CommentLikeRequestDTO;
-import com.example.blog_backend.model.responseDTO.CommentLikeResponseDTO;
+import com.example.blog_backend.model.responseDTO.CommentLikeDTO;
 import com.example.blog_backend.repository.CommentLikeRepository;
 import com.example.blog_backend.repository.CommentRepository;
 import com.example.blog_backend.repository.ReactionTypeRepository;
@@ -24,7 +24,7 @@ import java.util.UUID;
 @Service
 public class CommentLikeServiceImpl extends AbstractBaseCrudServiceImpl<
         CommentLikeEntity,
-        CommentLikeResponseDTO,
+        CommentLikeDTO,
         CommentLikeRequestDTO,
         CommentLikeMapper,
         CommentLikeRepository,
@@ -38,11 +38,14 @@ public class CommentLikeServiceImpl extends AbstractBaseCrudServiceImpl<
     private final ReactionTypeRepository reactionTypeRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    public CommentLikeServiceImpl(CommentLikeMapper commentLikeMapper, CommentLikeRepository commentLikeRepository,
-                                  CommentLikeSpecification commentLikeSpecification, UserContextService userContextService,
-                                  CommentRepository commentRepository, ReactionTypeRepository reactionTypeRepository,
+    public CommentLikeServiceImpl(CommentLikeMapper commentLikeMapper,
+                                  CommentLikeRepository commentLikeRepository,
+                                  CommentLikeSpecification commentLikeSpecification,
+                                  UserContextService userContextService,
+                                  CommentRepository commentRepository,
+                                  ReactionTypeRepository reactionTypeRepository,
                                   ApplicationEventPublisher eventPublisher) {
-        super(commentLikeMapper, commentLikeRepository, commentLikeSpecification,userContextService);
+        super(commentLikeMapper, commentLikeRepository, commentLikeSpecification);
         this.commentLikeRepository = commentLikeRepository;
         this.commentRepository = commentRepository;
         this.commentLikeMapper = commentLikeMapper;
@@ -54,10 +57,10 @@ public class CommentLikeServiceImpl extends AbstractBaseCrudServiceImpl<
 
     @Override
     @Transactional
-    public CommentLikeResponseDTO save(CommentLikeRequestDTO requestDTO) {
-        CommentEntity commentEntity = commentRepository.findByUuid(requestDTO.getCommentId())
+    public CommentLikeDTO save(CommentLikeRequestDTO requestDTO) {
+        CommentEntity commentEntity = commentRepository.findByUuid(requestDTO.getComment().getUuid())
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found."));
-        ReactionTypeEntity reactionTypeEntity = reactionTypeRepository.findByName(requestDTO.getReactionType())
+        ReactionTypeEntity reactionTypeEntity = reactionTypeRepository.findByName(requestDTO.getReactionType().getName())
                 .orElseThrow(() -> new EntityNotFoundException("Reaction type not found."));
         UserEntity currentUser = userContextService.getRequiredAuthenticatedUser();
         CommentLikeEntity entity = commentLikeMapper.requestDTOToEntity(requestDTO, commentEntity, reactionTypeEntity, currentUser);
