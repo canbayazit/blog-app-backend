@@ -2,9 +2,8 @@ package com.example.blog_backend.controller;
 
 import com.example.blog_backend.core.controller.impl.AbstractBaseCrudControllerImpl;
 import com.example.blog_backend.entity.CommentEntity;
-import com.example.blog_backend.model.requestDTO.CommentChildRequestDTO;
 import com.example.blog_backend.model.requestDTO.CommentRequestDTO;
-import com.example.blog_backend.model.responseDTO.CommentResponseDTO;
+import com.example.blog_backend.model.responseDTO.CommentDTO;
 import com.example.blog_backend.service.CommentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,7 +17,7 @@ import java.util.UUID;
 @RequestMapping("api/post/comment")
 public class CommentController extends AbstractBaseCrudControllerImpl<
         CommentEntity,
-        CommentResponseDTO,
+        CommentDTO,
         CommentRequestDTO,
         CommentService> {
     private final CommentService commentService;
@@ -28,16 +27,16 @@ public class CommentController extends AbstractBaseCrudControllerImpl<
     }
 
     @PostMapping("/reply/{targetCommentUuid}")
-    public ResponseEntity<CommentResponseDTO> createReply(
+    public ResponseEntity<CommentDTO> createReply(
             @PathVariable UUID targetCommentUuid,
-            @Valid @RequestBody CommentChildRequestDTO requestDTO
+            @Valid @RequestBody CommentRequestDTO requestDTO
     ) {
-        CommentResponseDTO dto = commentService.createReply(targetCommentUuid, requestDTO);
+        CommentDTO dto = commentService.createReply(targetCommentUuid, requestDTO);
         return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }
     @Override
     @PreAuthorize("@permissionEvaluator.isCommentOwner(#uuid, authentication) && @permissionEvaluator.isCommentBelongsToPost(#uuid, #requestDTO.postId)")
-    public ResponseEntity<CommentResponseDTO> update(@PathVariable UUID uuid, @Valid @RequestBody CommentRequestDTO requestDTO) {
+    public ResponseEntity<CommentDTO> update(@PathVariable UUID uuid, @Valid @RequestBody CommentRequestDTO requestDTO) {
         return super.update(uuid, requestDTO);
     }
 
