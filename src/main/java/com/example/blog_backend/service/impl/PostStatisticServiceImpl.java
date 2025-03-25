@@ -4,10 +4,9 @@ import com.example.blog_backend.core.service.impl.AbstractBaseCrudServiceImpl;
 import com.example.blog_backend.entity.PostStatisticEntity;
 import com.example.blog_backend.mapper.PostStatisticMapper;
 import com.example.blog_backend.model.requestDTO.PostStatisticRequestDTO;
-import com.example.blog_backend.model.responseDTO.PostStatisticResponseDTO;
+import com.example.blog_backend.model.responseDTO.PostStatisticDTO;
 import com.example.blog_backend.repository.PostStatisticRepository;
 import com.example.blog_backend.service.PostStatisticService;
-import com.example.blog_backend.service.UserContextService;
 import com.example.blog_backend.specification.PostStatisticSpecification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PostStatisticServiceImpl extends AbstractBaseCrudServiceImpl<
         PostStatisticEntity,
-        PostStatisticResponseDTO,
+        PostStatisticDTO,
         PostStatisticRequestDTO,
         PostStatisticMapper,
         PostStatisticRepository,
@@ -23,12 +22,13 @@ public class PostStatisticServiceImpl extends AbstractBaseCrudServiceImpl<
         implements PostStatisticService {
 
     private final PostStatisticRepository postStatisticRepository;
+    private final PostStatisticMapper postStatisticMapper;
     public PostStatisticServiceImpl(PostStatisticMapper postStatisticMapper,
                                     PostStatisticRepository postStatisticRepository,
-                                    PostStatisticSpecification postStatisticSpecification,
-                                    UserContextService userContextService) {
-        super(postStatisticMapper, postStatisticRepository, postStatisticSpecification, userContextService);
+                                    PostStatisticSpecification postStatisticSpecification) {
+        super(postStatisticMapper, postStatisticRepository, postStatisticSpecification);
         this.postStatisticRepository = postStatisticRepository;
+        this.postStatisticMapper = postStatisticMapper;
     }
 
     @Override

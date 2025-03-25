@@ -5,4 +5,8 @@ import lombok.Data;
 
 @Data
 public class PostStatisticRequestDTO extends BaseRequestDTO {
+    private PostRequestDTO post;
+    private int viewCount = 0;
+    private int likeCount = 0;
+    private int commentCount = 0;
 }

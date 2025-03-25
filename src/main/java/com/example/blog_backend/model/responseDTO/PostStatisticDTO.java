@@ -7,9 +7,12 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class CommentAggregateResponseDTO extends BaseDTO {
+public class PostStatisticDTO extends BaseDTO {
     private boolean isLiked;
     private String reacted;
+    private PostDTO post;
     private int likeCount;
+    private int viewCount;
+    private int commentCount;
     private List<ReactionTypeCountDTO> reactionTypeCounts;
 }
