@@ -1,9 +1,10 @@
 package com.example.blog_backend.controller;
 
 import com.example.blog_backend.core.controller.impl.AbstractBaseCrudControllerImpl;
+import com.example.blog_backend.entity.PostEntity;
 import com.example.blog_backend.model.requestDTO.PostRequestDTO;
 import com.example.blog_backend.model.requestDTO.PostStatusRequestDTO;
-import com.example.blog_backend.model.responseDTO.PostResponseDTO;
+import com.example.blog_backend.model.responseDTO.PostDTO;
 import com.example.blog_backend.service.PostService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -17,7 +18,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("api/post")
 public class PostController extends AbstractBaseCrudControllerImpl<
-        PostResponseDTO,
+        PostEntity,
+        PostDTO,
         PostRequestDTO,
         PostService> {
 
@@ -29,7 +31,7 @@ public class PostController extends AbstractBaseCrudControllerImpl<
 
     @Override
     @PreAuthorize("@permissionEvaluator.isPostOwner(#uuid, authentication)")
-    public ResponseEntity<PostResponseDTO> update(@PathVariable UUID uuid, @Valid @RequestBody PostRequestDTO requestDTO) {
+    public ResponseEntity<PostDTO> update(@PathVariable UUID uuid, @Valid @RequestBody PostRequestDTO requestDTO) {
         return super.update(uuid, requestDTO);
     }
 
@@ -41,8 +43,8 @@ public class PostController extends AbstractBaseCrudControllerImpl<
 
     @PreAuthorize("@permissionEvaluator.isPostOwner(#uuid, authentication)")
     @PutMapping("/publish-request/{uuid}")
-    public ResponseEntity<PostResponseDTO> sendPublishRequest(@PathVariable UUID uuid) {
-        PostResponseDTO publishedPost = postService.sendPublishRequest(uuid);
+    public ResponseEntity<PostDTO> sendPublishRequest(@PathVariable UUID uuid) {
+        PostDTO publishedPost = postService.sendPublishRequest(uuid);
         if (publishedPost != null) {
             return new ResponseEntity<>(publishedPost, HttpStatus.OK);
         } else {
@@ -51,8 +53,8 @@ public class PostController extends AbstractBaseCrudControllerImpl<
     }
 
     @PostMapping("/my-posts")
-    public ResponseEntity<List<PostResponseDTO>> getMyPosts(@Valid @RequestBody PostStatusRequestDTO status) {
-        List<PostResponseDTO> drafts = postService.getMyPostsByStatus(status);
+    public ResponseEntity<List<PostDTO>> getMyPosts(@Valid @RequestBody PostStatusRequestDTO status) {
+        List<PostDTO> drafts = postService.getMyPostsByStatus(status);
         return new ResponseEntity<>(drafts, HttpStatus.OK);
     }
 }

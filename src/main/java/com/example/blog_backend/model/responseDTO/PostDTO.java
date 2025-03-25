@@ -1,23 +1,23 @@
 package com.example.blog_backend.model.responseDTO;
 
 import com.example.blog_backend.core.dto.BaseDTO;
-import com.example.blog_backend.model.dto.CategoryDTO;
-import com.example.blog_backend.model.dto.PostUserDTO;
 import com.example.blog_backend.model.enums.PostStatus;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 
 @Data
-public class PostResponseDTO extends BaseDTO {
+public class PostDTO extends BaseDTO {
     private String title;
     private String content;
-    private PostUserDTO user;
-    private Set<CategoryDTO> categories;
-    private List<String> tags;
-    private int views;
-    private int likes;
+    private UserDTO user;
     private PostStatus status;
+    private Set<CategoryDTO> categories = new HashSet<>();
+    private List<CommentDTO> comments = new ArrayList<>();
+    private List<String> tags;
+    private PostStatisticDTO statistics;
 }
