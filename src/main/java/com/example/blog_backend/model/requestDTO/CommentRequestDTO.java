@@ -1,19 +1,18 @@
 package com.example.blog_backend.model.requestDTO;
 
 import com.example.blog_backend.core.dto.BaseRequestDTO;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class CommentRequestDTO extends BaseRequestDTO {
-    @NotBlank(message = "comment is mandatory")
-    @Size(max = 500, message = "Comment cannot exceed 500 characters.")
     private String comment;
-
-    @NotNull(message = "Post ID is mandatory")
-    private UUID postId;
+    private UserRequestDTO user;
+    private PostRequestDTO post;
+    private CommentRequestDTO parentComment;
+    private CommentRequestDTO repliedTo;
+    private List<CommentRequestDTO> replies = new ArrayList<>();
+    private CommentAggregateRequestDTO statistics;
 }

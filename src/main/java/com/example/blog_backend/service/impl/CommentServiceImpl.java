@@ -8,8 +8,8 @@ import com.example.blog_backend.mapper.CommentAggregateMapper;
 import com.example.blog_backend.mapper.CommentMapper;
 import com.example.blog_backend.model.dto.ReactionTypeCountDTO;
 import com.example.blog_backend.model.requestDTO.*;
-import com.example.blog_backend.model.responseDTO.CommentResponseDTO;
-import com.example.blog_backend.model.responseDTO.PageResponseDTO;
+import com.example.blog_backend.model.responseDTO.CommentDTO;
+import com.example.blog_backend.model.responseDTO.PageDTO;
 import com.example.blog_backend.repository.*;
 import com.example.blog_backend.service.CommentService;
 import com.example.blog_backend.service.UserContextService;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @Service
 public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
         CommentEntity,
-        CommentResponseDTO,
+        CommentDTO,
         CommentRequestDTO,
         CommentMapper,
         CommentRepository,
@@ -54,7 +54,7 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
                               ApplicationEventPublisher eventPublisher,
                               CommentAggregateMapper commentAggregateMapper,
                               CommentLikeRepository commentLikeRepository) {
-        super(commentMapper, commentRepository, commentSpecification, userContextService);
+        super(commentMapper, commentRepository, commentSpecification);
         this.commentMapper = commentMapper;
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
@@ -66,8 +66,9 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
         this.commentLikeRepository = commentLikeRepository;
     }
 
+    // post'a ait parent yorumları veya parent yoruma ait child yorumları specification ile filtreleyerek getiren metot
     @Override
-    public PageResponseDTO<CommentResponseDTO> getAllPageByFilter(BaseFilterRequestDTO filter) {
+    public PageDTO<CommentDTO> getAllPageByFilter(BaseFilterRequestDTO filter) {
         Pageable pageable;
         if (filter.getSortDTO() != null) {
             if (filter.getSortDTO().getDirection() == Sort.Direction.DESC) {
@@ -85,15 +86,15 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
         // Comment filter ve specification ayarları
         commentSpecification.setCriteriaList(filter.getFilters());
         Page<CommentEntity> entityPage = commentRepository.findAll(commentSpecification, pageable);
-        PageResponseDTO<CommentResponseDTO> pageResponseDTO = commentMapper.pageEntityToPageDTO(entityPage);
+        PageDTO<CommentDTO> pageResponseDTO = commentMapper.pageEntityToPageDTO(entityPage);
 
         // Opsiyonel kullanıcı bilgisi; oturum açılmamışsa Optional.empty() dönecek.
         Optional<UserEntity> optionalUser = userContextService.getOptionalAuthenticatedUser();
 
         // DTO'lardaki comment UUID'lerini topla.
-        List<CommentResponseDTO> content = pageResponseDTO.getContent();
+        List<CommentDTO> content = pageResponseDTO.getContent();
         List<UUID> commentUuids = content.stream()
-                .map(CommentResponseDTO::getUuid)
+                .map(CommentDTO::getUuid)
                 .collect(Collectors.toList());
 
         if (!commentUuids.isEmpty()) {
@@ -122,8 +123,8 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
                                 row -> (ReactionTypeEntity) row[1]
                         ));
 
-                // Her bir CommentResponseDTO için, kullanıcıya özel reaction bilgisi ve toplam reaction count bilgisini set et.
-                for (CommentResponseDTO commentDTO : content) {
+                // Her bir CommentDTO için, kullanıcıya özel reaction bilgisi ve toplam reaction count bilgisini set et.
+                for (CommentDTO commentDTO : content) {
                     ReactionTypeEntity reaction = reactionMap.get(commentDTO.getUuid());
                     boolean isLiked = reaction != null;
                     if (commentDTO.getStatistics() != null) {
@@ -135,7 +136,7 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
                 }
             } else {
                 // Kullanıcı oturum açmamışsa, yalnızca toplam reaction count bilgilerini set et.
-                for (CommentResponseDTO commentDTO : content) {
+                for (CommentDTO commentDTO : content) {
                     if (commentDTO.getStatistics() != null) {
                         commentDTO.getStatistics().setLiked(false);
                         commentDTO.getStatistics().setReacted(null);
@@ -152,20 +153,18 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
 
     @Override
     @Transactional
-    public CommentResponseDTO save(CommentRequestDTO requestDTO) {
-        PostEntity post = postRepository.findByUuid(requestDTO.getPostId())
+    public CommentDTO save(CommentRequestDTO requestDTO) {
+        PostEntity post = postRepository.findByUuid(requestDTO.getPost().getUuid())
                 .orElseThrow(() -> new EntityNotFoundException("Post not found."));
         UserEntity user = userContextService.getRequiredAuthenticatedUser();
         CommentEntity comment = commentMapper.requestDTOToEntity(requestDTO, post, user);
-        CommentResponseDTO commentResponseDTO = commentMapper.entityToDTO(commentRepository.save(comment));
-        if (commentResponseDTO.getStatistics() == null){
-            CommentAggregateEntity commentAggregateEntity = commentAggregateMapper.requestDTOToEntity(new CommentAggregateRequestDTO());
+        if (comment.getStatistics() == null){
+            CommentAggregateEntity commentAggregateEntity = new CommentAggregateEntity();
             commentAggregateEntity.setComment(comment);
-            commentResponseDTO.setStatistics(commentAggregateMapper.entityToDTO(commentAggregateRepository.save(commentAggregateEntity)));
+            comment.setStatistics(commentAggregateEntity);
         }
-        /*PostStatisticEntity stat = post.getStatistics();
-        stat.setLikeCount(stat.getLikeCount() + 1);
-        postStatisticRepository.save(stat);*/
+        CommentDTO commentResponseDTO = commentMapper.entityToDTO(commentRepository.save(comment));
+
 
         CommentCreatedEvent event = new CommentCreatedEvent(this,
                 comment.getPost().getId(),
@@ -178,43 +177,47 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
 
     @Override
     @Transactional
-    public CommentResponseDTO createReply(UUID targetCommentUuid, CommentChildRequestDTO requestDTO) {
+    public CommentDTO createReply(UUID targetCommentUuid, CommentRequestDTO requestDTO) {
         // Yanıt verilecek yorumu alıyoruz.
         CommentEntity targetComment = commentRepository.findByUuid(targetCommentUuid)
                 .orElseThrow(() -> new EntityNotFoundException("Target comment not found."));
 
-        // Thread'in ana yorumunu belirleyelim:
-        // Eğer targetComment bir ana yorum ise, thread ana yorumu targetComment olur.
-        // Eğer targetComment bir child ise, thread ana yorumu targetComment.getParentComment() olur.
-        CommentEntity threadParent = (targetComment.getParentComment() == null)
+        // Child yorumun ana yorumunu belirleyelim:
+        // bir kullanıcı bir ana yoruma veya ana yorum altındaki herhangi bri child comment'a yorum atabilir
+        // Eğer targetComment bir ana yorum ise, targetComment ana yorum olur.
+        // Eğer targetComment bir child ise, yani ana yorum altında bir child yoruma cevap verilmiş ise
+        // o zaman targetComment'ın ana yorumunu almamız lazım oda şu şekilde targetComment.getParentComment() olur.
+        CommentEntity parentComment = (targetComment.getParentComment() == null)
                 ? targetComment
                 : targetComment.getParentComment();
 
-        // Yeni cevap (child comment) oluşturulurken, parent olarak thread ana yorumu set ediyoruz.
+        // Yeni cevap (child comment) oluşturulurken, parent olarak  ana yorum olan parentComment'ı set ediyoruz.
         CommentEntity childComment = commentMapper.requestDTOToChildCommentEntity(
                 requestDTO,
-                threadParent,
+                parentComment,
                 userContextService.getRequiredAuthenticatedUser());
 
-        // Eğer targetComment bir child ise, yani zaten bir yanıtlanmış yorumsa, repliedTo'yu set edelim.
+        // Eğer targetComment bir child ise, yani ana yorum altında bir yoruma cevap verilen child yorum ise
+        // kullanıcı hangi child yoruma cevap veriyor onu set edekim, yani repliedTo'yu set edelim.
         if (targetComment.getParentComment() != null) {
             childComment.setRepliedTo(targetComment);
         }
 
-        CommentResponseDTO commentResponseDTO = commentMapper.entityToDTO(commentRepository.save(childComment));
-
-        if (commentResponseDTO.getStatistics() == null){
-            CommentAggregateEntity commentAggregateEntity = commentAggregateMapper.requestDTOToEntity(new CommentAggregateRequestDTO());
+        // child yorumun istatistik tablosunu kaydedelim.
+        if (childComment.getStatistics() == null){
+            CommentAggregateEntity commentAggregateEntity = new CommentAggregateEntity();
             commentAggregateEntity.setComment(childComment);
-            commentResponseDTO.setStatistics(commentAggregateMapper.entityToDTO(commentAggregateRepository.save(commentAggregateEntity)));
+            childComment.setStatistics(commentAggregateEntity);
         }
+
+        CommentDTO commentResponseDTO = commentMapper.entityToDTO(commentRepository.save(childComment));
 
         CommentCreatedEvent event = new CommentCreatedEvent(this,
                 childComment.getPost().getId(),
                 childComment.getId());
         eventPublisher.publishEvent(event);
 
-        return commentMapper.entityToDTO(childComment);
+        return commentResponseDTO;
     }
 
 
