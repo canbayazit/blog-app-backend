@@ -11,5 +11,4 @@ import java.util.Set;
 @Data
 public class CategoryDTO extends BaseDTO {
     private String name;
-    private Set<PostDTO> posts = new HashSet<>();
 }
