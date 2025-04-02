@@ -7,7 +7,7 @@ import com.example.blog_backend.core.repository.BaseRepository;
 import com.example.blog_backend.core.service.BaseCrudService;
 import com.example.blog_backend.core.specification.BaseSpecification;
 import com.example.blog_backend.model.requestDTO.BaseFilterRequestDTO;
-import com.example.blog_backend.model.responseDTO.PageResponseDTO;
+import com.example.blog_backend.model.responseDTO.PageDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +27,7 @@ public abstract class AbstractBaseCrudServiceImpl<
         Mapper extends IBaseMapper<DTO, Entity, RequestDTO>,
         Repository extends BaseRepository<Entity>,
         Specification extends BaseSpecification<Entity>>
-        implements BaseCrudService<DTO,RequestDTO> {
+        implements BaseCrudService<Entity, DTO,RequestDTO> {
 
     private final Mapper getMapper;
 
@@ -47,7 +47,7 @@ public abstract class AbstractBaseCrudServiceImpl<
     // Ama sadece pagination değilde filtrelemeler de yapacaksak o zaman dto üzerinden almak daha iyi bir çözümdür
     // filter dto oluşturduk çünkü pagination dışında filtreleme de yapıyoruz
     @Override
-    public PageResponseDTO<DTO> getAllPageByFilter(BaseFilterRequestDTO filter) {
+    public PageDTO<DTO> getAllPageByFilter(BaseFilterRequestDTO filter) {
         Pageable pageable;
         if (filter.getSortDTO() != null) {
             if (filter.getSortDTO().getDirection() == Sort.Direction.DESC) {
