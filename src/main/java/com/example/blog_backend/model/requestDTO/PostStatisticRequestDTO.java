@@ -3,10 +3,12 @@ package com.example.blog_backend.model.requestDTO;
 import com.example.blog_backend.core.dto.BaseRequestDTO;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class PostStatisticRequestDTO extends BaseRequestDTO {
-    private PostRequestDTO post;
-    private int viewCount = 0;
-    private int likeCount = 0;
-    private int commentCount = 0;
+    private UUID postId;
+    private int viewCount;
+    private int likeCount;
+    private int commentCount;
 }
