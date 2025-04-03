@@ -2,7 +2,7 @@ package com.example.blog_backend.core.mapper;
 
 import com.example.blog_backend.core.dto.BaseDTO;
 import com.example.blog_backend.core.entity.BaseEntity;
-import com.example.blog_backend.model.responseDTO.PageResponseDTO;
+import com.example.blog_backend.model.responseDTO.PageDTO;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.data.domain.Page;
@@ -37,5 +37,5 @@ public interface IBaseMapper<
     // hasContent boolean türünde olduğu için mapstruct isContent olarak algılıyor yani "is" ifadesine bakıyormuş
     // "has" ifadesine bakmıyor mapsturct.
     @Mapping(target = "hasContent", expression = "java(entityPage.hasContent())")
-    PageResponseDTO<DTO> pageEntityToPageDTO(Page<Entity> entityPage);
+    PageDTO<DTO> pageEntityToPageDTO(Page<Entity> entityPage);
 }
