@@ -58,7 +58,7 @@ public class CommentLikeServiceImpl extends AbstractBaseCrudServiceImpl<
     @Override
     @Transactional
     public CommentLikeDTO save(CommentLikeRequestDTO requestDTO) {
-        CommentEntity commentEntity = commentRepository.findByUuid(requestDTO.getComment().getUuid())
+        CommentEntity commentEntity = commentRepository.findByUuid(requestDTO.getCommentId())
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found."));
         ReactionTypeEntity reactionTypeEntity = reactionTypeRepository.findByName(requestDTO.getReactionType().getName())
                 .orElseThrow(() -> new EntityNotFoundException("Reaction type not found."));

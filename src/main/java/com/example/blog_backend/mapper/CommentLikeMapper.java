@@ -3,14 +3,12 @@ package com.example.blog_backend.mapper;
 import com.example.blog_backend.core.mapper.IBaseMapper;
 import com.example.blog_backend.entity.*;
 import com.example.blog_backend.model.requestDTO.CommentLikeRequestDTO;
-import com.example.blog_backend.model.responseDTO.CommentLikeResponseDTO;
-import org.mapstruct.Context;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import com.example.blog_backend.model.responseDTO.CommentLikeDTO;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", uses = {CommentMapper.class})
-public interface CommentLikeMapper extends IBaseMapper<CommentLikeResponseDTO, CommentLikeEntity, CommentLikeRequestDTO> {
+@Mapper(componentModel = "spring", injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+        uses = {CommentMapper.class, UserMapper.class, ReactionTypeMapper.class})
+public interface CommentLikeMapper extends IBaseMapper<CommentLikeDTO, CommentLikeEntity, CommentLikeRequestDTO> {
 
     @Mapping(target = "user", expression = "java(userEntity)")
     @Mapping(target = "comment", expression = "java(commentEntity)")
@@ -32,10 +30,6 @@ public interface CommentLikeMapper extends IBaseMapper<CommentLikeResponseDTO, C
         return null;
     }
 
-    @Mapping(target = "reactionType", source = "reactionType.name")
     @Mapping(target = "commentId", source = "comment.uuid")
-    CommentLikeResponseDTO entityToDTO(CommentLikeEntity entity);
-
-    @Mapping(target = "reactionType", ignore = true)
-    CommentLikeEntity dtoToEntity(CommentLikeResponseDTO dto);
+    CommentLikeDTO entityToDTO(CommentLikeEntity entity);
 }
