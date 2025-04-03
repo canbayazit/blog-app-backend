@@ -44,7 +44,7 @@ public class FavoriteServiceImpl extends AbstractBaseCrudServiceImpl<
     @Override
     @Transactional
     public FavoriteDTO save(FavoriteRequestDTO requestDTO) {
-        PostEntity postEntity = postRepository.findByUuid(requestDTO.getPost().getUuid())
+        PostEntity postEntity = postRepository.findByUuid(requestDTO.getPostId())
                 .orElseThrow(() -> new EntityNotFoundException("Post not found."));
         UserEntity currentUser = userContextService.getRequiredAuthenticatedUser();
         FavoriteEntity entity = favoriteMapper.requestDTOToEntity(requestDTO, postEntity, currentUser);
