@@ -3,12 +3,14 @@ package com.example.blog_backend.entity;
 import com.example.blog_backend.core.entity.BaseEntity;
 import com.example.blog_backend.model.enums.PostStatus;
 import jakarta.persistence.*;
+import jakarta.persistence.Entity;
 import lombok.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 @Getter
 @Setter
 @Entity
@@ -31,7 +33,7 @@ public class PostEntity extends BaseEntity {
     @Column(nullable = false)
     private PostStatus status;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<CategoryEntity> categories = new HashSet<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -44,11 +46,8 @@ public class PostEntity extends BaseEntity {
     @Column(name = "tag")
     private List<String> tags;
 
-    @Column(nullable = false)
-    private int views = 0;
-
-    @Column(nullable = false)
-    private int likes = 0;
+    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private PostStatisticEntity statistics;
 
     @PrePersist
     protected void onCreate() {
