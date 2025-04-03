@@ -50,4 +50,8 @@ public class UserEntity extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id", nullable = false)
     )
     private Set<RoleEntity> roles;
+
+    public String getFullName() {
+        return this.firstName + " " + this.lastName;
+    }
 }
