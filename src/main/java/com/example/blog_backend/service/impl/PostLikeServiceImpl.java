@@ -10,7 +10,7 @@ import com.example.blog_backend.entity.UserEntity;
 import com.example.blog_backend.mapper.PostLikeMapper;
 import com.example.blog_backend.model.enums.ContextType;
 import com.example.blog_backend.model.requestDTO.PostLikeRequestDTO;
-import com.example.blog_backend.model.responseDTO.PostLikeResponseDTO;
+import com.example.blog_backend.model.responseDTO.PostLikeDTO;
 import com.example.blog_backend.repository.PostLikeRepository;
 import com.example.blog_backend.repository.PostRepository;
 import com.example.blog_backend.repository.ReactionTypeRepository;
@@ -27,7 +27,7 @@ import java.util.UUID;
 @Service
 public class PostLikeServiceImpl extends AbstractBaseCrudServiceImpl<
         PostLikeEntity,
-        PostLikeResponseDTO,
+        PostLikeDTO,
         PostLikeRequestDTO,
         PostLikeMapper,
         PostLikeRepository,
@@ -42,11 +42,14 @@ public class PostLikeServiceImpl extends AbstractBaseCrudServiceImpl<
     private final ReactionTypeRepository reactionTypeRepository;
 
 
-    public PostLikeServiceImpl(PostLikeMapper postLikeMapper, PostLikeRepository postLikeRepository,
-                               PostLikeSpecification postLikeSpecification, UserContextService userContextService,
-                               PostRepository postRepository, ApplicationEventPublisher eventPublisher,
+    public PostLikeServiceImpl(PostLikeMapper postLikeMapper,
+                               PostLikeRepository postLikeRepository,
+                               PostLikeSpecification postLikeSpecification,
+                               UserContextService userContextService,
+                               PostRepository postRepository,
+                               ApplicationEventPublisher eventPublisher,
                                ReactionTypeRepository reactionTypeRepository) {
-        super(postLikeMapper, postLikeRepository, postLikeSpecification, userContextService);
+        super(postLikeMapper, postLikeRepository, postLikeSpecification);
         this.postLikeRepository = postLikeRepository;
         this.postRepository = postRepository;
         this.postLikeMapper = postLikeMapper;
@@ -58,10 +61,10 @@ public class PostLikeServiceImpl extends AbstractBaseCrudServiceImpl<
 
     @Override
     @Transactional
-    public PostLikeResponseDTO save(PostLikeRequestDTO requestDTO) {
+    public PostLikeDTO save(PostLikeRequestDTO requestDTO) {
         PostEntity postEntity = postRepository.findByUuid(requestDTO.getPostId())
                 .orElseThrow(() -> new EntityNotFoundException("Post not found."));
-        ReactionTypeEntity reactionTypeEntity = reactionTypeRepository.findByName(requestDTO.getReactionType())
+        ReactionTypeEntity reactionTypeEntity = reactionTypeRepository.findByName(requestDTO.getReactionType().getName())
                 .orElseThrow(() -> new EntityNotFoundException("Reaction type not found."));
         UserEntity currentUser = userContextService.getRequiredAuthenticatedUser();
         PostLikeEntity entity = postLikeMapper.requestDTOToEntity(requestDTO, postEntity, reactionTypeEntity, currentUser);

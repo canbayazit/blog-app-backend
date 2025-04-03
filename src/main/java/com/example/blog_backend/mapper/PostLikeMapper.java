@@ -3,11 +3,12 @@ package com.example.blog_backend.mapper;
 import com.example.blog_backend.core.mapper.IBaseMapper;
 import com.example.blog_backend.entity.*;
 import com.example.blog_backend.model.requestDTO.PostLikeRequestDTO;
-import com.example.blog_backend.model.responseDTO.PostLikeResponseDTO;
+import com.example.blog_backend.model.responseDTO.PostLikeDTO;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", uses = {PostMapper.class})
-public interface PostLikeMapper extends IBaseMapper<PostLikeResponseDTO, PostLikeEntity, PostLikeRequestDTO> {
+@Mapper(componentModel = "spring", injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+        uses = {PostMapper.class, UserMapper.class, ReactionTypeMapper.class})
+public interface PostLikeMapper extends IBaseMapper<PostLikeDTO, PostLikeEntity, PostLikeRequestDTO> {
 
     @Mapping(target = "user", expression = "java(userEntity)")
     @Mapping(target = "post", expression = "java(postEntity)")
@@ -29,11 +30,6 @@ public interface PostLikeMapper extends IBaseMapper<PostLikeResponseDTO, PostLik
         return null;
     }
 
-    @Mapping(target = "reactionType", source = "reactionType.name")
     @Mapping(target = "postId", source = "post.uuid")
-    PostLikeResponseDTO entityToDTO(PostLikeEntity entity);
-
-    @Mapping(target = "reactionType", ignore = true)
-    PostLikeEntity dtoToEntity(PostLikeResponseDTO dto);
-
+    PostLikeDTO entityToDTO(PostLikeEntity entity);
 }

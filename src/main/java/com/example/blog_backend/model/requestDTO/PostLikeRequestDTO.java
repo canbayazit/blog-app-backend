@@ -10,7 +10,5 @@ import java.util.UUID;
 public class PostLikeRequestDTO extends BaseRequestDTO {
     @NotNull(message = "Post ID is mandatory")
     private UUID postId;
-
-    @NotNull(message = "Reaction type is mandatory")
-    private String reactionType;
+    private ReactionTypeRequestDTO reactionType;
 }
