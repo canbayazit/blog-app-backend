@@ -154,17 +154,11 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
     @Override
     @Transactional
     public CommentDTO save(CommentRequestDTO requestDTO) {
-        PostEntity post = postRepository.findByUuid(requestDTO.getPost().getUuid())
+        PostEntity post = postRepository.findByUuid(requestDTO.getPostId())
                 .orElseThrow(() -> new EntityNotFoundException("Post not found."));
         UserEntity user = userContextService.getRequiredAuthenticatedUser();
         CommentEntity comment = commentMapper.requestDTOToEntity(requestDTO, post, user);
-        if (comment.getStatistics() == null){
-            CommentAggregateEntity commentAggregateEntity = new CommentAggregateEntity();
-            commentAggregateEntity.setComment(comment);
-            comment.setStatistics(commentAggregateEntity);
-        }
         CommentDTO commentResponseDTO = commentMapper.entityToDTO(commentRepository.save(comment));
-
 
         CommentCreatedEvent event = new CommentCreatedEvent(this,
                 comment.getPost().getId(),
@@ -177,8 +171,8 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
 
     @Override
     @Transactional
-    public CommentDTO createReply(UUID targetCommentUuid, CommentRequestDTO requestDTO) {
-        // Yanıt verilecek yorumu alıyoruz.
+    public CommentDTO createReply(UUID targetCommentUuid, CommentChildRequestDTO requestDTO) {
+        // Yanıt verilecek yorumu alıyoruz. Bu parent comment'a cevapta olabilir child comment'a cevapta olabilir.
         CommentEntity targetComment = commentRepository.findByUuid(targetCommentUuid)
                 .orElseThrow(() -> new EntityNotFoundException("Target comment not found."));
 
@@ -197,27 +191,14 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
                 parentComment,
                 userContextService.getRequiredAuthenticatedUser());
 
-        // Eğer targetComment bir child ise, yani ana yorum altında bir yoruma cevap verilen child yorum ise
-        // kullanıcı hangi child yoruma cevap veriyor onu set edekim, yani repliedTo'yu set edelim.
-        if (targetComment.getParentComment() != null) {
-            childComment.setRepliedTo(targetComment);
-        }
-
-        // child yorumun istatistik tablosunu kaydedelim.
-        if (childComment.getStatistics() == null){
-            CommentAggregateEntity commentAggregateEntity = new CommentAggregateEntity();
-            commentAggregateEntity.setComment(childComment);
-            childComment.setStatistics(commentAggregateEntity);
-        }
-
-        CommentDTO commentResponseDTO = commentMapper.entityToDTO(commentRepository.save(childComment));
+        CommentDTO commentDTO = commentMapper.entityToDTO(commentRepository.save(childComment));
 
         CommentCreatedEvent event = new CommentCreatedEvent(this,
                 childComment.getPost().getId(),
                 childComment.getId());
         eventPublisher.publishEvent(event);
 
-        return commentResponseDTO;
+        return commentDTO;
     }
 
 
@@ -232,8 +213,8 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
         // Kaç yorum silinecek (parent + child sayısı?)
         int totalDeleted = 1;
 
-        // 3) Child Yorumlar Var mı?
-        // (Tek seviye child. CascadeType.ALL ise, repository.delete(parent) çocukları da silecek.)
+        // Child Yorumlar Var mı?
+        // Tek seviye child. CascadeType.ALL ise, repository.delete(parent) çocukları da silecek.
         List<CommentEntity> replies = comment.getReplies();
         if (replies != null && !replies.isEmpty()) {
             // totalDeleted = 1 (kendisi) + replies.size()
@@ -244,17 +225,6 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
                 comment.getPost().getId(),
                 totalDeleted);
         eventPublisher.publishEvent(event);
-
-
-        /*if (comment.getParentComment() != null) {
-            // Yani bu comment bir child
-            // Parent aggregator'ı bul
-            CommentEntity parentComment = comment.getParentComment();
-            CommentAggregateEntity parentAgg = parentComment.getStatistics();
-            parentAgg.setChildCount(parentAgg.getChildCount() - 1);
-            commentAggregateRepository.save(parentAgg);
-
-        }*/
 
         // 5) Yorumu Sil (Cascade sayesinde child'lar da otomatik silinir.)
         commentRepository.delete(comment);

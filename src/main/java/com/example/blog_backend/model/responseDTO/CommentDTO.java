@@ -3,16 +3,13 @@ package com.example.blog_backend.model.responseDTO;
 import com.example.blog_backend.core.dto.BaseDTO;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 @Data
 public class CommentDTO extends BaseDTO {
     private String comment;
-    private UserDTO user;
-    private PostDTO post;
-    private CommentDTO parentComment;
-    private CommentDTO repliedTo;
-    private List<CommentDTO> replies = new ArrayList<>();
+    private UserSummaryDTO user;
+    private UUID postId;
+    private UUID parentCommentId;
     private CommentAggregateDTO statistics;
 }

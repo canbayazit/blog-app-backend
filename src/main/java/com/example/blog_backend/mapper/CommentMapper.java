@@ -1,17 +1,21 @@
 package com.example.blog_backend.mapper;
 
 import com.example.blog_backend.core.mapper.IBaseMapper;
-import com.example.blog_backend.entity.CommentEntity;
-import com.example.blog_backend.entity.PostEntity;
-import com.example.blog_backend.entity.UserEntity;
+import com.example.blog_backend.entity.*;
 import com.example.blog_backend.model.requestDTO.CommentChildRequestDTO;
 import com.example.blog_backend.model.requestDTO.CommentRequestDTO;
-import com.example.blog_backend.model.responseDTO.CommentResponseDTO;
+import com.example.blog_backend.model.responseDTO.CommentDTO;
 import org.mapstruct.*;
 
+@Mapper(componentModel = "spring", injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+        uses = {UserMapper.class, CommentAggregateMapper.class})
+public interface CommentMapper extends IBaseMapper<CommentDTO, CommentEntity, CommentRequestDTO> {
+    @Override
+    default CommentEntity requestDTOToEntity(CommentRequestDTO dto) {
+        return null;
+    }
 
-@Mapper(componentModel = "spring", injectionStrategy = InjectionStrategy.CONSTRUCTOR, uses = {PostMapper.class})
-public interface CommentMapper extends IBaseMapper<CommentResponseDTO, CommentEntity, CommentRequestDTO> {
+    // parent comment için
     @Mapping(target = "user", expression = "java(userEntity)")
     @Mapping(target = "post", expression = "java(postEntity)")
     @Mapping(target = "id", ignore = true)
@@ -20,11 +24,15 @@ public interface CommentMapper extends IBaseMapper<CommentResponseDTO, CommentEn
                                      @Context PostEntity postEntity,
                                      @Context UserEntity userEntity);
 
-    @Override
-    default CommentEntity requestDTOToEntity(CommentRequestDTO dto) {
-        return null;
+    @AfterMapping
+    default void afterRequestDTOToEntity(CommentRequestDTO requestDTO,
+                                        @Context PostEntity postEntity,
+                                        @Context UserEntity userEntity,
+                                        @MappingTarget CommentEntity commentEntity) {
+        if (commentEntity.getStatistics() != null) {
+            commentEntity.getStatistics().setComment(commentEntity);
+        }
     }
-
 
     // burda context kullanmamızın nedeni mapstruct birden fazla parametre geçince hepsini kaynak olarak algılıyor
     // o yüzden bütün parametrelerdeki değerleri comment entity'ye maplemeye çalışıyor.
@@ -39,12 +47,25 @@ public interface CommentMapper extends IBaseMapper<CommentResponseDTO, CommentEn
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "uuid", ignore = true)
     CommentEntity requestDTOToChildCommentEntity(CommentChildRequestDTO dto,
-                                                 @Context CommentEntity parentComment,
-                                                 @Context UserEntity currentUser);
+                                                                 @Context CommentEntity parentComment,
+                                                                 @Context UserEntity currentUser);
 
-    @Mapping(target = "repliedTo", source = "repliedTo.user.username")
-    CommentResponseDTO entityToDTO(CommentEntity commentEntity);
-    @Mapping(target = "repliedTo", ignore = true)
-    CommentEntity dtoToEntity(CommentResponseDTO dto);
+    @AfterMapping
+    default void afterRequestDTOToChildCommentEntity(CommentRequestDTO dto,
+                                                     @Context CommentEntity parentComment,
+                                                     @Context UserEntity currentUser,
+                                                     @MappingTarget CommentEntity commentEntity) {
+        if (commentEntity.getStatistics() != null) {
+            commentEntity.getStatistics().setComment(commentEntity);
+        }
+    }
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "uuid", ignore = true)
+    @Mapping(target = "statistics", ignore = true)
+    CommentEntity requestDtoToExistEntity(@MappingTarget CommentEntity entity, CommentRequestDTO requestDTO);
+
+    @Mapping(target = "postId", source = "post.uuid")
+    @Mapping(target = "parentCommentId", source = "parentComment.uuid")
+    CommentDTO entityToDTO(CommentEntity commentEntity);
 }

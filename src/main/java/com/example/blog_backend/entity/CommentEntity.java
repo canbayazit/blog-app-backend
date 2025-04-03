@@ -30,13 +30,12 @@ public class CommentEntity extends BaseEntity {
     @JoinColumn(name = "parent_comment_id")
     private CommentEntity parentComment;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "replied_to_comment_id")
-    private CommentEntity repliedTo;
-
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<CommentEntity> replies = new ArrayList<>();
 
     @OneToOne(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private CommentAggregateEntity statistics;
+
+    /*@OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CommentLikeEntity> likes = new ArrayList<>();*/
 }
