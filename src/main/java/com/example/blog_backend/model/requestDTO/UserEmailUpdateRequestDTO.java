@@ -5,10 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class UserEmailRequestDTO {
-
+public class UserEmailUpdateRequestDTO {
     @NotBlank(message = "Email is mandatory")
     @Email(message = "Invalid email format")
     private String email;
-
 }

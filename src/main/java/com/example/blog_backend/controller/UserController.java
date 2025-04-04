@@ -1,89 +1,69 @@
 package com.example.blog_backend.controller;
 
-import com.example.blog_backend.model.requestDTO.UserEmailRequestDTO;
-import com.example.blog_backend.model.requestDTO.UserPasswordUpdateRequestDTO;
-import com.example.blog_backend.model.requestDTO.UserProfileRequestDTO;
-import com.example.blog_backend.model.responseDTO.UserProfileResponseDTO;
-import com.example.blog_backend.model.responseDTO.UserResponseDTO;
+import com.example.blog_backend.core.controller.impl.AbstractBaseCrudControllerImpl;
+import com.example.blog_backend.entity.UserEntity;
+import com.example.blog_backend.model.requestDTO.*;
+import com.example.blog_backend.model.responseDTO.ApiResponseDTO;
+import com.example.blog_backend.model.responseDTO.UserDTO;
 import com.example.blog_backend.service.UserService;
+import com.example.blog_backend.util.response.ApiResponseUtil;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 
 @RestController
-@RequestMapping("user")
-public class UserController {
+@RequestMapping("api/user")
+public class UserController extends AbstractBaseCrudControllerImpl<
+        UserEntity,
+        UserDTO,
+        UserRequestDTO,
+        UserService
+        > {
     private final UserService userService;
     public UserController(UserService userService) {
+        super(userService);
         this.userService = userService;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("get-all")
-    public ResponseEntity<List<UserResponseDTO>> getAll() {
-        return new ResponseEntity<>(userService.getAll(), HttpStatus.OK);
-    }
-
-    @PreAuthorize("hasRole('USER') and @userService.isSelf(#uuid)")
-    @PutMapping("/update/profile/{uuid}")
-    public ResponseEntity<UserProfileResponseDTO> updateProfile(@PathVariable UUID uuid, @Valid @RequestBody UserProfileRequestDTO requestDTO) {
-        UserProfileResponseDTO updatedProfile = userService.updateProfile(uuid, requestDTO);
-        if (updatedProfile != null) {
-            return new ResponseEntity<>(updatedProfile, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @PreAuthorize("hasRole('USER') and @userService.isSelf(#id)")
-    @PutMapping("/update/email/{id}")
-    public ResponseEntity<Boolean> updateEmail(@PathVariable UUID id, @Valid @RequestBody UserEmailRequestDTO updateEmailDTO) {
-        Boolean isUpdated = userService.updateEmail(id, updateEmailDTO);
+    @PutMapping("/update/email")
+    public ResponseEntity<ApiResponseDTO<Boolean>> updateEmail(@Valid @RequestBody UserEmailUpdateRequestDTO updateEmailDTO) {
+        Boolean isUpdated = userService.updateEmail(updateEmailDTO);
         if (isUpdated != null && isUpdated) {
-            return new ResponseEntity<>(true, HttpStatus.OK);
+            ApiResponseDTO<Boolean> response = ApiResponseUtil.success(true, "Email updated successfully.");
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            ApiResponseDTO<Boolean> response = ApiResponseUtil.error("Email update failed.");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
-    @PreAuthorize("hasRole('USER') and @userService.isSelf(#uuid)")
-    @PutMapping("/update/password/{uuid}")
-    public ResponseEntity<Boolean> updatePassword(@PathVariable UUID uuid, @Valid @RequestBody UserPasswordUpdateRequestDTO passwordUpdateRequestDTO) {
-        Boolean isUpdated = userService.updatePassword(uuid, passwordUpdateRequestDTO);
-        if (isUpdated != null && isUpdated) {
-            return new ResponseEntity<>(true, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
+    // RequestMapping anatasyonuna sahip herhangi bir class içindeki metotta principal nesnesini geçebiliriz,
+    // spring security otomatik olarak Principal nesnesini inject eder. Ama biz daha model bir yapıyla yaklaşacaz
+    // ve UserContextServiceImpl kullanacaz
+    //public ResponseEntity<?> updatePassword(@Valid @RequestBody UserPasswordUpdateRequestDTO passwordUpdateRequestDTO,
+    //                                            Principal connectedUser)
+    @PutMapping("/update/password")
+    public ResponseEntity<ApiResponseDTO<Boolean>> updatePassword(@Valid @RequestBody UserPasswordUpdateRequestDTO passwordUpdateRequestDTO) {
+        userService.updatePassword(passwordUpdateRequestDTO);
+        ApiResponseDTO<Boolean> response = ApiResponseUtil.success(true, "Password updated successfully.");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @userService.isSelf(#uuid)")
-    @GetMapping("/get/{uuid}")
-    public ResponseEntity<UserResponseDTO> getByUUID(@PathVariable UUID uuid) {
-        UserResponseDTO dto = userService.getByUUID(uuid);
-        if (dto != null) {
-            return new ResponseEntity<>(dto, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @PreAuthorize("hasRole('ADMIN') or @userService.isSelf(#uuid)")
-    @DeleteMapping("/delete/{uuid}")
-    public ResponseEntity<Boolean> deleteByUUID(@PathVariable UUID uuid) {
-        Boolean isDeleted = userService.deleteByUUID(uuid);
+    @PreAuthorize("@authService.isSelf(#userId)")
+    @DeleteMapping("/delete")
+    public ResponseEntity<ApiResponseDTO<Boolean>> deleteUserSelf(@PathVariable UUID userId) {
+        Boolean isDeleted = userService.deleteByUUID(userId);
         if (isDeleted) {
-            return new ResponseEntity<>(true, HttpStatus.OK);
+            ApiResponseDTO<Boolean> response = ApiResponseUtil.success(true, "User deleted successfully.");
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
+            ApiResponseDTO<Boolean> response = ApiResponseUtil.error("User deletion failed.");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
-
-
 }
