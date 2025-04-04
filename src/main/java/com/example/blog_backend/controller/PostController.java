@@ -4,8 +4,10 @@ import com.example.blog_backend.core.controller.impl.AbstractBaseCrudControllerI
 import com.example.blog_backend.entity.PostEntity;
 import com.example.blog_backend.model.requestDTO.PostRequestDTO;
 import com.example.blog_backend.model.requestDTO.PostStatusRequestDTO;
+import com.example.blog_backend.model.responseDTO.ApiResponseDTO;
 import com.example.blog_backend.model.responseDTO.PostDTO;
 import com.example.blog_backend.service.PostService;
+import com.example.blog_backend.util.response.ApiResponseUtil;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,30 +33,33 @@ public class PostController extends AbstractBaseCrudControllerImpl<
 
     @Override
     @PreAuthorize("@permissionEvaluator.isPostOwner(#uuid, authentication)")
-    public ResponseEntity<PostDTO> update(@PathVariable UUID uuid, @Valid @RequestBody PostRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponseDTO<PostDTO>> update(@PathVariable UUID uuid, @Valid @RequestBody PostRequestDTO requestDTO) {
         return super.update(uuid, requestDTO);
     }
 
     @Override
     @PreAuthorize("@permissionEvaluator.isPostOwner(#uuid, authentication)")
-    public ResponseEntity<Boolean> deleteByUUID(@PathVariable UUID uuid) {
+    public ResponseEntity<ApiResponseDTO<Boolean>> deleteByUUID(@PathVariable UUID uuid) {
         return super.deleteByUUID(uuid);
     }
 
     @PreAuthorize("@permissionEvaluator.isPostOwner(#uuid, authentication)")
     @PutMapping("/publish-request/{uuid}")
-    public ResponseEntity<PostDTO> sendPublishRequest(@PathVariable UUID uuid) {
+    public ResponseEntity<ApiResponseDTO<PostDTO>> sendPublishRequest(@PathVariable UUID uuid) {
         PostDTO publishedPost = postService.sendPublishRequest(uuid);
         if (publishedPost != null) {
-            return new ResponseEntity<>(publishedPost, HttpStatus.OK);
+            ApiResponseDTO<PostDTO> response = ApiResponseUtil.success(publishedPost, "Publish request sent successfully.");
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            ApiResponseDTO<PostDTO> response = ApiResponseUtil.error("Data not found or publish request failed.");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
     @PostMapping("/my-posts")
-    public ResponseEntity<List<PostDTO>> getMyPosts(@Valid @RequestBody PostStatusRequestDTO status) {
+    public ResponseEntity<ApiResponseDTO<List<PostDTO>>> getMyPosts(@Valid @RequestBody PostStatusRequestDTO status) {
         List<PostDTO> drafts = postService.getMyPostsByStatus(status);
-        return new ResponseEntity<>(drafts, HttpStatus.OK);
+        ApiResponseDTO<List<PostDTO>> response = ApiResponseUtil.success(drafts, "Posts retrieved successfully.");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
