@@ -21,8 +21,6 @@ public interface BaseCrudService<
 
     DTO getByUUID(UUID uuid);
 
-    Entity findByUuid(UUID uuid);
-
     Boolean deleteByUUID(UUID uuid);
 
     PageDTO<DTO> getAllPageByFilter(BaseFilterRequestDTO filter);
