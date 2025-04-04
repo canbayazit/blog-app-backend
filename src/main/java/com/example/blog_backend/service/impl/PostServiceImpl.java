@@ -3,17 +3,14 @@ package com.example.blog_backend.service.impl;
 import com.example.blog_backend.core.service.impl.AbstractBaseCrudServiceImpl;
 import com.example.blog_backend.entity.*;
 import com.example.blog_backend.mapper.PostMapper;
-import com.example.blog_backend.mapper.PostStatisticMapper;
 import com.example.blog_backend.model.enums.PostStatus;
 import com.example.blog_backend.model.requestDTO.*;
 import com.example.blog_backend.model.responseDTO.PostDTO;
 import com.example.blog_backend.repository.CategoryRepository;
-import com.example.blog_backend.repository.PostLikeRepository;
 import com.example.blog_backend.repository.PostRepository;
-import com.example.blog_backend.repository.PostStatisticRepository;
 import com.example.blog_backend.service.*;
 import com.example.blog_backend.specification.PostSpecification;
-import org.springframework.context.ApplicationEventPublisher;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,17 +27,10 @@ public class PostServiceImpl extends AbstractBaseCrudServiceImpl<
         PostSpecification>
         implements PostService {
     private final PostRepository postRepository;
-    private final PostStatisticRepository postStatisticRepository;
     private final CategoryService categoryService;
     private final PostMapper postMapper;
-    private final PostSpecification postSpecification;
-    private final PostStatisticMapper postStatisticMapper;
     private final UserContextService userContextService;
-    private final PostLikeService postLikeService;
-    private final PostLikeRepository postLikeRepository;
-    private final PostStatisticService postStatisticService;
     private final CategoryRepository categoryRepository;
-    private final ApplicationEventPublisher eventPublisher;
 
 
     public PostServiceImpl(PostMapper postMapper,
@@ -48,27 +38,38 @@ public class PostServiceImpl extends AbstractBaseCrudServiceImpl<
                            CategoryService categoryService,
                            PostSpecification postSpecification,
                            UserContextService userContextService,
-                           PostStatisticMapper postStatisticMapper,
-                           PostStatisticRepository postStatisticRepository,
-                           PostLikeService postLikeService,
-                           PostLikeRepository postLikeRepository,
-                           PostStatisticService postStatisticService,
-                           CategoryRepository categoryRepository,
-                           ApplicationEventPublisher eventPublisher) {
+                           CategoryRepository categoryRepository) {
         super(postMapper, postRepository, postSpecification);
         this.postRepository = postRepository;
-        this.postStatisticRepository = postStatisticRepository;
         this.categoryService = categoryService;
         this.postMapper = postMapper;
-        this.postSpecification = postSpecification;
-        this.postStatisticMapper = postStatisticMapper;
         this.userContextService = userContextService;
-        this.postLikeService = postLikeService;
-        this.postLikeRepository = postLikeRepository;
-        this.eventPublisher = eventPublisher;
-        this.postStatisticService = postStatisticService;
         this.categoryRepository = categoryRepository;
 
+    }
+
+    // hibernate post request içinde post statistic değerlerini göndermezsek bile kendisi post statistic değerlerini
+    // default olarak oluşturup post statistic tablosuna set etme işlemini yapmıyor mu ?
+    // static boş object "{}" gönderirdiğimizde post_id null olarak setlendiği için hata fırlatıyor.
+    // Ama static null gönderirsek post'u kaydediyor
+    @Override
+    @Transactional
+    public PostDTO save(PostRequestDTO requestDTO) {
+        PostEntity postEntity = postMapper.requestDTOToEntity(
+                requestDTO,
+                userContextService.getRequiredAuthenticatedUser());
+        for (CategoryRequestDTO category : requestDTO.getCategories()) {
+            if (postEntity.getCategories() != null) {
+                postEntity.getCategories().add(categoryRepository.findByUuid(category.getUuid())
+                        .orElseThrow(() -> new EntityNotFoundException("Category not found!")));
+            } else {
+                Set<CategoryEntity> categories = new HashSet<>();
+                categories.add(categoryRepository.findByUuid(category.getUuid())
+                        .orElseThrow(() -> new EntityNotFoundException("Category not found!")));
+                postEntity.setCategories(categories);
+            }
+        }
+        return postMapper.entityToDTO(postRepository.save(postEntity));
     }
 
     @Override
@@ -80,8 +81,20 @@ public class PostServiceImpl extends AbstractBaseCrudServiceImpl<
                 throw new IllegalStateException("Only draft posts can be updated");
             }
             postEntity = postMapper.requestDtoToExistEntity(postEntity, requestDTO);
-            postRepository.save(postEntity);
-            return postMapper.entityToDTO(postEntity);
+            for (CategoryRequestDTO category : requestDTO.getCategories()) {
+                if (postEntity.getCategories() != null){
+                    postEntity.getCategories().clear();
+                    CategoryEntity categoryEntity = categoryRepository.findByUuid(category.getUuid())
+                            .orElseThrow(() -> new EntityNotFoundException("Category not found!"));
+                    postEntity.getCategories().add(categoryEntity);
+                } else {
+                    Set<CategoryEntity> categories = new HashSet<>();
+                    categories.add(categoryRepository.findByUuid(category.getUuid())
+                            .orElseThrow(() -> new EntityNotFoundException("Category not found!")));
+                    postEntity.setCategories(categories);
+                }
+            }
+            return postMapper.entityToDTO(postRepository.save(postEntity));
         } else {
             return null;
         }
