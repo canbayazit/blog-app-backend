@@ -2,6 +2,7 @@ package com.example.blog_backend.core.controller;
 
 import com.example.blog_backend.core.dto.BaseDTO;
 import com.example.blog_backend.model.requestDTO.BaseFilterRequestDTO;
+import com.example.blog_backend.model.responseDTO.ApiResponseDTO;
 import com.example.blog_backend.model.responseDTO.PageDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,20 +15,20 @@ public interface BaseCrudController<
         RequestDTO> {
 
     @GetMapping("get-all")
-    ResponseEntity<List<DTO>> getAll();
+    ResponseEntity<ApiResponseDTO<List<DTO>>> getAll();
 
     @PostMapping("get-all-page-by-filter")
-    ResponseEntity<PageDTO<DTO>> getAllPageByFilter(BaseFilterRequestDTO filterRequestDTO);
+    ResponseEntity<ApiResponseDTO<PageDTO<DTO>>> getAllPageByFilter(BaseFilterRequestDTO filterRequestDTO);
 
     @PostMapping("/create")
-    ResponseEntity<DTO> save(@RequestBody RequestDTO requestDTO);
+    ResponseEntity<ApiResponseDTO<DTO>> save(@RequestBody RequestDTO requestDTO);
 
     @PutMapping("/update/{uuid}")
-    ResponseEntity<DTO> update(@PathVariable UUID uuid, @RequestBody RequestDTO requestDTO);
+    ResponseEntity<ApiResponseDTO<DTO>> update(@PathVariable UUID uuid, @RequestBody RequestDTO requestDTO);
 
     @DeleteMapping("/delete/{uuid}")
-    ResponseEntity<Boolean> deleteByUUID(@PathVariable UUID uuid);
+    ResponseEntity<ApiResponseDTO<Boolean>> deleteByUUID(@PathVariable UUID uuid);
 
     @GetMapping("/get/{uuid}")
-    ResponseEntity<DTO> getByUUID(@PathVariable UUID uuid);
+    ResponseEntity<ApiResponseDTO<DTO>> getByUUID(@PathVariable UUID uuid);
 }
