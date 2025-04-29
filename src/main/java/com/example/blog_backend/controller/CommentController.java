@@ -4,10 +4,9 @@ import com.example.blog_backend.core.controller.impl.AbstractBaseCrudControllerI
 import com.example.blog_backend.entity.CommentEntity;
 import com.example.blog_backend.model.requestDTO.CommentChildRequestDTO;
 import com.example.blog_backend.model.requestDTO.CommentRequestDTO;
-import com.example.blog_backend.model.responseDTO.ApiResponseDTO;
 import com.example.blog_backend.model.responseDTO.CommentDTO;
 import com.example.blog_backend.service.CommentService;
-import com.example.blog_backend.util.response.ApiResponseUtil;
+import com.example.blog_backend.util.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,24 +29,24 @@ public class CommentController extends AbstractBaseCrudControllerImpl<
     }
 
     @PostMapping("/reply/{targetCommentUuid}")
-    public ResponseEntity<ApiResponseDTO<CommentDTO>> createReply(
+    public ResponseEntity<ApiResponse<CommentDTO>> createReply(
             @PathVariable UUID targetCommentUuid,
             @Valid @RequestBody CommentChildRequestDTO requestDTO
     ) {
         CommentDTO dto = commentService.createReply(targetCommentUuid, requestDTO);
-        ApiResponseDTO<CommentDTO> response = ApiResponseUtil.success(dto, "Data created successfully.");
+        ApiResponse<CommentDTO> response = ApiResponse.success(dto, "Data created successfully.");
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @Override
     @PreAuthorize("@permissionEvaluator.isCommentOwner(#uuid, authentication) && @permissionEvaluator.isCommentBelongsToPost(#uuid, #requestDTO.postId)")
-    public ResponseEntity<ApiResponseDTO<CommentDTO>> update(@PathVariable UUID uuid, @Valid @RequestBody CommentRequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<CommentDTO>> update(@PathVariable UUID uuid, @Valid @RequestBody CommentRequestDTO requestDTO) {
         return super.update(uuid, requestDTO);
     }
 
     @Override
     @PreAuthorize("@permissionEvaluator.isCommentOwner(#uuid, authentication)")
-    public ResponseEntity<ApiResponseDTO<Boolean>> deleteByUUID(@PathVariable UUID uuid) {
+    public ResponseEntity<ApiResponse<Boolean>> deleteByUUID(@PathVariable UUID uuid) {
         return super.deleteByUUID(uuid);
     }
 }

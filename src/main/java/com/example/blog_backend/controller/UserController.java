@@ -3,10 +3,9 @@ package com.example.blog_backend.controller;
 import com.example.blog_backend.core.controller.impl.AbstractBaseCrudControllerImpl;
 import com.example.blog_backend.entity.UserEntity;
 import com.example.blog_backend.model.requestDTO.*;
-import com.example.blog_backend.model.responseDTO.ApiResponseDTO;
 import com.example.blog_backend.model.responseDTO.UserDTO;
 import com.example.blog_backend.service.UserService;
-import com.example.blog_backend.util.response.ApiResponseUtil;
+import com.example.blog_backend.util.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,13 +30,13 @@ public class UserController extends AbstractBaseCrudControllerImpl<
     }
 
     @PutMapping("/update/email")
-    public ResponseEntity<ApiResponseDTO<Boolean>> updateEmail(@Valid @RequestBody UserEmailUpdateRequestDTO updateEmailDTO) {
+    public ResponseEntity<ApiResponse<Boolean>> updateEmail(@Valid @RequestBody UserEmailUpdateRequestDTO updateEmailDTO) {
         Boolean isUpdated = userService.updateEmail(updateEmailDTO);
         if (isUpdated != null && isUpdated) {
-            ApiResponseDTO<Boolean> response = ApiResponseUtil.success(true, "Email updated successfully.");
+            ApiResponse<Boolean> response = ApiResponse.success(true, "Email updated successfully.");
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            ApiResponseDTO<Boolean> response = ApiResponseUtil.error("Email update failed.");
+            ApiResponse<Boolean> response = ApiResponse.error(HttpStatus.NOT_FOUND, "Email update failed.");
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
@@ -48,21 +47,21 @@ public class UserController extends AbstractBaseCrudControllerImpl<
     //public ResponseEntity<?> updatePassword(@Valid @RequestBody UserPasswordUpdateRequestDTO passwordUpdateRequestDTO,
     //                                            Principal connectedUser)
     @PutMapping("/update/password")
-    public ResponseEntity<ApiResponseDTO<Boolean>> updatePassword(@Valid @RequestBody UserPasswordUpdateRequestDTO passwordUpdateRequestDTO) {
+    public ResponseEntity<ApiResponse<Boolean>> updatePassword(@Valid @RequestBody UserPasswordUpdateRequestDTO passwordUpdateRequestDTO) {
         userService.updatePassword(passwordUpdateRequestDTO);
-        ApiResponseDTO<Boolean> response = ApiResponseUtil.success(true, "Password updated successfully.");
+        ApiResponse<Boolean> response = ApiResponse.success(true, "Password updated successfully.");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PreAuthorize("@authService.isSelf(#userId)")
     @DeleteMapping("/delete")
-    public ResponseEntity<ApiResponseDTO<Boolean>> deleteUserSelf(@PathVariable UUID userId) {
+    public ResponseEntity<ApiResponse<Boolean>> deleteUserSelf(@PathVariable UUID userId) {
         Boolean isDeleted = userService.deleteByUUID(userId);
         if (isDeleted) {
-            ApiResponseDTO<Boolean> response = ApiResponseUtil.success(true, "User deleted successfully.");
+            ApiResponse<Boolean> response = ApiResponse.success(true, "User deleted successfully.");
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            ApiResponseDTO<Boolean> response = ApiResponseUtil.error("User deletion failed.");
+            ApiResponse<Boolean> response = ApiResponse.error(HttpStatus.NOT_FOUND, "User deletion failed.");
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
