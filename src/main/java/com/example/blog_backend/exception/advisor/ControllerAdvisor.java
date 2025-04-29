@@ -3,8 +3,8 @@ package com.example.blog_backend.exception.advisor;
 import com.example.blog_backend.exception.AccountDeactivatedException;
 import com.example.blog_backend.exception.AccountSuspendedException;
 import com.example.blog_backend.exception.AlreadyExistsException;
-import com.example.blog_backend.model.responseDTO.ApiResponseDTO;
-import com.example.blog_backend.util.response.ApiResponseUtil;
+import com.example.blog_backend.model.responseDTO.ApiErrorDTO;
+import com.example.blog_backend.util.response.ApiResponse;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,114 +21,152 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class ControllerAdvisor extends ResponseEntityExceptionHandler {
-
-    //validasyon hataları
+    // validasyon hataları
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
                                                                   HttpHeaders headers,
                                                                   HttpStatusCode status,
                                                                   WebRequest request) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage()));
-        ApiResponseDTO<Object> response = ApiResponseUtil.error("Validation failed", errors);
+        List<ApiErrorDTO> errorList = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> ApiErrorDTO.builder()
+                        .fieldName(error.getField())
+                        .message(error.getDefaultMessage())
+                        .build())
+                .collect(Collectors.toList());
+
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.BAD_REQUEST,
+                "Validation failed",
+                errorList
+        );
+
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    // HttpMessageNotReadableException  durumunu handle ediyoruz
+    // request body okunamadığında veya dönüştürülemediğinde
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable (HttpMessageNotReadableException ex,
                                                                             HttpHeaders headers,
                                                                             HttpStatusCode status,
                                                                             WebRequest request) {
-        ApiResponseDTO<Object> response = ApiResponseUtil.error("Request body is missing or invalid.");
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.BAD_REQUEST,
+                "Request body is missing or invalid."
+        );
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    // Handle IllegalArgumentException
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
-        ApiResponseDTO<Object> response = ApiResponseUtil.error(ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage()
+        );
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    // Handle UsernameNotFoundException
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<Object> handleUsernameNotFoundException(UsernameNotFoundException ex) {
-        ApiResponseDTO<Object> response = ApiResponseUtil.error(ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage()
+        );
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    // Handle IllegalStateException
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Object> handleIllegalStateException(IllegalStateException ex) {
-        ApiResponseDTO<Object> response = ApiResponseUtil.error(ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage()
+        );
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    // Handle AuthenticationException
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
-        ApiResponseDTO<Object> response = ApiResponseUtil.error(ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.UNAUTHORIZED,
+                ex.getMessage()
+        );
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
-    // Handle AlreadyExistsException
     @ExceptionHandler(AlreadyExistsException.class)
     public ResponseEntity<Object> handleAlreadyExistsException(AlreadyExistsException ex) {
-        ApiResponseDTO<Object> response = ApiResponseUtil.error(ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.CONFLICT,
+                ex.getMessage()
+        );
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
-    // Handle AccountDeactivatedException
     @ExceptionHandler(AccountDeactivatedException.class)
     public ResponseEntity<Object> handleAccountDeactivatedException(AccountDeactivatedException ex) {
-        ApiResponseDTO<Object> response = ApiResponseUtil.error(ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.LOCKED,
+                ex.getMessage()
+        );
         return new ResponseEntity<>(response, HttpStatus.LOCKED);
     }
 
-    // Handle AccountSuspendedException
     @ExceptionHandler(AccountSuspendedException.class)
     public ResponseEntity<Object> handleAccountSuspendedException(AccountSuspendedException ex) {
-        ApiResponseDTO<Object> response = ApiResponseUtil.error(ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage()
+        );
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
-    // Handle AuthorizationDeniedException
     @ExceptionHandler(AuthorizationDeniedException.class)
     public ResponseEntity<Object> handleAuthorizationDeniedException(AuthorizationDeniedException ex) {
-        ApiResponseDTO<Object> response = ApiResponseUtil.error(ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.UNAUTHORIZED,
+                ex.getMessage()
+        );
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
-    // Handle AccessDeniedException
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex) {
-        ApiResponseDTO<Object> response = ApiResponseUtil.error(ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage()
+        );
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
-    // Handle EntityNotFoundException
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex) {
-        ApiResponseDTO<Object> response = ApiResponseUtil.error(ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage()
+        );
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    /*// Genel Exception durumlarını handle ediyoruz
+    // Genel Exception
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGeneralException(Exception ex) {
-         response = new (
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "An error occurred " + ex.getClass().getName(),
-                false
+        ApiErrorDTO apiError = ApiErrorDTO.builder()
+                .fieldName(ex.getClass().getSimpleName())
+                .message(ex.getMessage() != null ? ex.getMessage() : "No message available")
+                .build();
+
+        List<ApiErrorDTO> errors = Collections.singletonList(apiError);
+        ApiResponse<Void> response = ApiResponse.error(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred.",
+                errors
         );
+
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-    }*/
+    }
 
 }
