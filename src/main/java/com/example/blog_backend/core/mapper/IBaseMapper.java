@@ -3,8 +3,10 @@ package com.example.blog_backend.core.mapper;
 import com.example.blog_backend.core.dto.BaseDTO;
 import com.example.blog_backend.core.entity.BaseEntity;
 import com.example.blog_backend.model.responseDTO.PageDTO;
+import com.example.blog_backend.model.responseDTO.PaginationDTO;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -36,6 +38,17 @@ public interface IBaseMapper<
 
     // hasContent boolean türünde olduğu için mapstruct isContent olarak algılıyor yani "is" ifadesine bakıyormuş
     // "has" ifadesine bakmıyor mapsturct.
-    @Mapping(target = "hasContent", expression = "java(entityPage.hasContent())")
+    @Mapping(target = "content", source = "entityPage.content")
+    @Mapping(target = "pagination", source = "entityPage", qualifiedByName = "mapPageToPaginationDTO")
     PageDTO<DTO> pageEntityToPageDTO(Page<Entity> entityPage);
+
+    @Named("mapPageToPaginationDTO")
+    @Mapping(target = "hasContent", expression = "java(entityPage.hasContent())")
+    @Mapping(target = "totalPages", source = "totalPages")
+    @Mapping(target = "totalElements", source = "totalElements")
+    @Mapping(target = "number", source = "number")
+    @Mapping(target = "size", source = "size")
+    @Mapping(target = "last", source = "last")
+    @Mapping(target = "sort", source = "sort")
+    PaginationDTO mapPageToPaginationDTO(Page<Entity> entityPage);
 }

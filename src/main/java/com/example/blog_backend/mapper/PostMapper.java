@@ -9,6 +9,8 @@ import com.example.blog_backend.model.responseDTO.PostDTO;
 import org.mapstruct.*;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 
 @Mapper(componentModel = "spring", injectionStrategy = InjectionStrategy.CONSTRUCTOR,
         uses = {UserMapper.class, CategoryMapper.class, PostStatisticMapper.class, CommentMapper.class})
@@ -47,7 +49,16 @@ public interface PostMapper extends IBaseMapper<PostDTO, PostEntity, PostRequest
     @Mapping(target = "statistics", ignore = true)
     PostEntity requestDtoToExistEntity(@MappingTarget PostEntity entity, PostRequestDTO requestDTO);
 
-    @Mapping(target = "hasContent", expression = "java(entityPage.hasContent())")
-    @Mapping(target = "content", ignore = true)
+    @Override
+    @Mapping(target = "pagination", source = "entityPage", qualifiedByName = "mapPageToPaginationDTO")
+    @Mapping(target = "content", source = "entityPage.content", qualifiedByName = "toDtoListWithoutContent")
     PageDTO<PostDTO> pageEntityToPageDTO(Page<PostEntity> entityPage);
+
+    @Named("toDtoListWithoutContent")
+    @IterableMapping(qualifiedByName = "toDtoWithoutContent") // koleksiyon dönüşümlerinde ve null stratejilerinde kullanılır
+    List<PostDTO> toDtoListWithoutContent(List<PostEntity> entityList);
+
+    @Named("toDtoWithoutContent")
+    @Mapping(target = "content", ignore = true)
+    PostDTO toDtoWithoutContent(PostEntity entity);
 }
