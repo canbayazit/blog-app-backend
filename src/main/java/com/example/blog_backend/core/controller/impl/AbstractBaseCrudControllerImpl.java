@@ -5,9 +5,8 @@ import com.example.blog_backend.core.dto.BaseDTO;
 import com.example.blog_backend.core.entity.BaseEntity;
 import com.example.blog_backend.core.service.BaseCrudService;
 import com.example.blog_backend.model.requestDTO.BaseFilterRequestDTO;
-import com.example.blog_backend.model.responseDTO.ApiResponseDTO;
 import com.example.blog_backend.model.responseDTO.PageDTO;
-import com.example.blog_backend.util.response.ApiResponseUtil;
+import com.example.blog_backend.util.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,58 +27,58 @@ public abstract class AbstractBaseCrudControllerImpl<
     private final Service getService;
 
     @Override
-    public ResponseEntity<ApiResponseDTO<List<DTO>>> getAll() {
+    public ResponseEntity<ApiResponse<List<DTO>>> getAll() {
         List<DTO> data = getService.getAll();
-        ApiResponseDTO<List<DTO>> response = ApiResponseUtil.success(data, "Data retrieved successfully.");
+        ApiResponse<List<DTO>> response = ApiResponse.success(data, "Data retrieved successfully.");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<ApiResponseDTO<PageDTO<DTO>>> getAllPageByFilter(@RequestBody BaseFilterRequestDTO filterRequestDTO) {
+    public ResponseEntity<ApiResponse<List<DTO>>> getAllPageByFilter(@RequestBody BaseFilterRequestDTO filterRequestDTO) {
         PageDTO<DTO> data = getService.getAllPageByFilter(filterRequestDTO);
-        ApiResponseDTO<PageDTO<DTO>> response = ApiResponseUtil.success(data, "Data retrieved successfully.");
+        ApiResponse<List<DTO>> response = ApiResponse.paginated(data.getContent(), data.getPagination(), "Data retrieved successfully.");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<ApiResponseDTO<DTO>> save(@Valid @RequestBody RequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<DTO>> save(@Valid @RequestBody RequestDTO requestDTO) {
         DTO data = getService.save(requestDTO);
-        ApiResponseDTO<DTO> response = ApiResponseUtil.success(data, "Data created successfully.");
+        ApiResponse<DTO> response = ApiResponse.success(data, "Data created successfully.");
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @Override
-    public ResponseEntity<ApiResponseDTO<DTO>> update(@PathVariable UUID uuid, @Valid @RequestBody RequestDTO requestDTO) {
+    public ResponseEntity<ApiResponse<DTO>> update(@PathVariable UUID uuid, @Valid @RequestBody RequestDTO requestDTO) {
         DTO data = getService.update(uuid, requestDTO);
         if (data != null) {
-            ApiResponseDTO<DTO> response = ApiResponseUtil.success(data, "Update successful.");
+            ApiResponse<DTO> response = ApiResponse.success(data, "Update successful.");
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            ApiResponseDTO<DTO> response = ApiResponseUtil.error("An error occurred.");
+            ApiResponse<DTO> response = ApiResponse.error(HttpStatus.NOT_FOUND, "An error occurred.");
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
     @Override
-    public ResponseEntity<ApiResponseDTO<Boolean>> deleteByUUID(@PathVariable UUID uuid) {
+    public ResponseEntity<ApiResponse<Boolean>> deleteByUUID(@PathVariable UUID uuid) {
         Boolean isDeleted = getService.deleteByUUID(uuid);
         if (isDeleted) {
-            ApiResponseDTO<Boolean> response = ApiResponseUtil.success(true, "Deletion successful.");
+            ApiResponse<Boolean> response = ApiResponse.success(true, "Deletion successful.");
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            ApiResponseDTO<Boolean> response = ApiResponseUtil.error("Deletion failed.");
+            ApiResponse<Boolean> response = ApiResponse.error(HttpStatus.NOT_FOUND, "Deletion failed.");
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
     @Override
-    public ResponseEntity<ApiResponseDTO<DTO>> getByUUID(@PathVariable UUID uuid) {
+    public ResponseEntity<ApiResponse<DTO>> getByUUID(@PathVariable UUID uuid) {
         DTO data = getService.getByUUID(uuid);
         if (data != null) {
-            ApiResponseDTO<DTO> response = ApiResponseUtil.success(data, "Data retrieved successfully.");
+            ApiResponse<DTO> response = ApiResponse.success(data, "Data retrieved successfully.");
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            ApiResponseDTO<DTO> response = ApiResponseUtil.error("Data not found.");
+            ApiResponse<DTO> response = ApiResponse.error(HttpStatus.NOT_FOUND, "Data not found.");
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
