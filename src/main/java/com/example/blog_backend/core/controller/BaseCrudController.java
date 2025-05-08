@@ -2,6 +2,7 @@ package com.example.blog_backend.core.controller;
 
 import com.example.blog_backend.core.dto.BaseDTO;
 import com.example.blog_backend.model.requestDTO.BaseFilterRequestDTO;
+import com.example.blog_backend.model.responseDTO.PageDTO;
 import com.example.blog_backend.util.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,7 @@ public interface BaseCrudController<
     ResponseEntity<ApiResponse<List<DTO>>> getAll();
 
     @PostMapping("get-all-page-by-filter")
-    ResponseEntity<ApiResponse<List<DTO>>> getAllPageByFilter(BaseFilterRequestDTO filterRequestDTO);
+    ResponseEntity<ApiResponse<PageDTO<DTO>>> getAllPageByFilter(BaseFilterRequestDTO filterRequestDTO);
 
     @PostMapping("/create")
     ResponseEntity<ApiResponse<DTO>> save(@RequestBody RequestDTO requestDTO);

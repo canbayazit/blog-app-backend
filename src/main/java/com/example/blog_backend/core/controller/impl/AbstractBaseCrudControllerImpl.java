@@ -34,9 +34,9 @@ public abstract class AbstractBaseCrudControllerImpl<
     }
 
     @Override
-    public ResponseEntity<ApiResponse<List<DTO>>> getAllPageByFilter(@RequestBody BaseFilterRequestDTO filterRequestDTO) {
+    public ResponseEntity<ApiResponse<PageDTO<DTO>>> getAllPageByFilter(@RequestBody BaseFilterRequestDTO filterRequestDTO) {
         PageDTO<DTO> data = getService.getAllPageByFilter(filterRequestDTO);
-        ApiResponse<List<DTO>> response = ApiResponse.paginated(data.getContent(), data.getPagination(), "Data retrieved successfully.");
+        ApiResponse<PageDTO<DTO>> response = ApiResponse.success(data, "Data retrieved successfully.");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
