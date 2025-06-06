@@ -3,6 +3,7 @@ package com.example.blog_backend.exception.advisor;
 import com.example.blog_backend.exception.AccountDeactivatedException;
 import com.example.blog_backend.exception.AccountSuspendedException;
 import com.example.blog_backend.exception.AlreadyExistsException;
+import com.example.blog_backend.exception.TokenRefreshException;
 import com.example.blog_backend.model.responseDTO.ApiErrorDTO;
 import com.example.blog_backend.util.response.ApiResponse;
 import jakarta.persistence.EntityNotFoundException;
@@ -149,6 +150,15 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
                 ex.getMessage()
         );
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(TokenRefreshException.class)
+    public ResponseEntity<Object> handleTokenRefreshException(TokenRefreshException ex) {
+        ApiResponse<Object> response = ApiResponse.error(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
     // Genel Exception
