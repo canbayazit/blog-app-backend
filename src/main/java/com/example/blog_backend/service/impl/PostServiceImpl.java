@@ -84,7 +84,10 @@ public class PostServiceImpl extends AbstractBaseCrudServiceImpl<
 
 
         // 6) Dönüşteki PostDTO'ların içindeki UUID'leri topla
-        List<PostDTO> content = pageResponseDTO.getContent();
+        // findAll ile jpa content yoksa boş array setler default olarak fakat mapperda bu content tekrar
+        // null setlenir bu sebepten dolayı null check kontrolü gerekiyor
+        List<PostDTO> content = Optional.ofNullable(pageResponseDTO.getContent())
+                .orElse(Collections.emptyList());
         List<UUID> postUuids = content.stream()
                 .map(PostDTO::getUuid)  // DTO'da uuid alanınız olduğunu varsayıyoruz
                 .collect(Collectors.toList());

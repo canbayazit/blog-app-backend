@@ -92,7 +92,8 @@ public class CommentServiceImpl extends AbstractBaseCrudServiceImpl<
         Optional<UserEntity> optionalUser = userContextService.getOptionalAuthenticatedUser();
 
         // DTO'lardaki comment UUID'lerini topla.
-        List<CommentDTO> content = pageResponseDTO.getContent();
+        List<CommentDTO> content = Optional.ofNullable(pageResponseDTO.getContent())
+                .orElse(Collections.emptyList());
         List<UUID> commentUuids = content.stream()
                 .map(CommentDTO::getUuid)
                 .collect(Collectors.toList());
